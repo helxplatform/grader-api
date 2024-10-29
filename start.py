@@ -1,5 +1,9 @@
+import logging
 import os
 import glob
+import sys
+import pythonjsonlogger
+import pythonjsonlogger.jsonlogger
 import uvicorn
 import asyncio
 from dotenv import load_dotenv
@@ -12,8 +16,7 @@ logging_config = {
   "version": 1,
   "disable_existing_loggers": True,
   "formatters": {
-    "json": {
-      "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
+    "default": {
       "format": "%(asctime)s %(levelname)s %(message)s"
     }
   },
@@ -21,8 +24,8 @@ logging_config = {
     "default": {
       "level": "INFO",
       "class": "logging.StreamHandler",
-      "formatter": "json",
-      "stream": "sys.stdout"
+      "formatter": "default",
+      "stream": sys.stdout
     }
   },
   "loggers": { 
@@ -30,10 +33,10 @@ logging_config = {
       "handlers": ["default"],
       "level": "INFO",
       "propagate": True
-    }
-  },
-  "rotation": "20 days",
-  "retention": "12 months"
+    },
+  }
+#   "rotation": "20 days",
+#   "retention": "12 months"
 }
 
 def positive_int(value):
@@ -86,7 +89,7 @@ def main(host: str, port: int, reload: bool, workers: int | None=None):
         print(str(e))
 
     # Start the application
-    uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers, log_config=logging_config)
+    uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers)
 
 
 if __name__ == "__main__":

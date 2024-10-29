@@ -11,21 +11,23 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.api_v1 import api_router
 from app.core.config import settings, DevPhase
 from app.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddleware
-from eduhelx_utils.custom_logger import CustomizeLogger
 from app.core.exceptions import CustomException
 
 import logging
 from pathlib import Path
 
-logger = logging.getLogger("root")
-# logger.setLevel(logging.INFO)
-# formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-# stream_handler = logging.StreamHandler(sys.stdout)
-# stream_handler.setFormatter(formatter)
-# file_handler = logging.FileHandler("info.log")
-# file_handler.setFormatter(formatter)
-# logger.addHandler(stream_handler)
-# logger.addHandler(file_handler)
+# root_logger = logging.getLogger()
+# root_logger.disabled = True
+logging.getLogger().removeHandler(logging.getLogger().handlers[0])
+logger = logging.getLogger("uvicorn")
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
+file_handler = logging.FileHandler("info.log")
+file_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+logger.addHandler(file_handler)
 
 
 def init_routers(app: FastAPI):

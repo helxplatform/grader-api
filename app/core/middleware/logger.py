@@ -61,7 +61,7 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         return response
     
-    async def _create_request_log(self, request: Request) -> dict:
+    async def _create_request_log(self, request: Request) -> str:
 
         path = request.url.path
         if request.query_params:
