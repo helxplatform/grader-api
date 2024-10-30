@@ -96,15 +96,15 @@ class LogMiddleware(BaseHTTPMiddleware):
             "execution_time": f"{execution_time:0.4f}s"
         }
 
-        resp_body = [section async for section in response.__dict__["body_iterator"]]
-        response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
+        # resp_body = [section async for section in response.__dict__["body_iterator"]]
+        # response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
 
-        try:
-            resp_body = json.loads(resp_body[0].decode())
-        except:
-            resp_body = str(resp_body)
+        # try:
+        #     resp_body = json.loads(resp_body[0].decode())
+        # except:
+        #     resp_body = str(resp_body)
 
-        response_log_dict["body"] = resp_body
+        # response_log_dict["body"] = resp_body
 
         return response, response_log_dict
 

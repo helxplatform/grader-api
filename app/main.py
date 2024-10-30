@@ -16,19 +16,13 @@ from app.core.exceptions import CustomException
 import logging
 from pathlib import Path
 
-# root_logger = logging.getLogger()
-# root_logger.disabled = True
-logging.getLogger().removeHandler(logging.getLogger().handlers[0])
-logger = logging.getLogger("uvicorn")
+logging.getLogger("uvicorn.access").disabled = True
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(formatter)
-file_handler = logging.FileHandler("info.log")
-file_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-logger.addHandler(file_handler)
-
 
 def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
