@@ -24,7 +24,7 @@ celery_app.conf.update(
     }
 )
 
-def get_tasks_by_name(
+def get_task_ids_by_name(
     task_name: str,
     # Currently running tasks
     include_active=True,
@@ -53,7 +53,7 @@ def get_tasks_by_name(
 
     return task_ids
 
-def get_task_status_by_id(task_id: str) -> AsyncResult:
+def get_task_result_by_id(task_id: str) -> AsyncResult:
     return celery_app.AsyncResult(task_id)
 
 def cancel_task_by_id(task_id: str):

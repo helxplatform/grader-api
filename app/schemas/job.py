@@ -8,6 +8,7 @@ from dateutil import parser as dateparser
 from celery.result import AsyncResult
 
 class JobStatus(str, Enum):
+    """ Pending may indicate an unknown or nonexistent task. """
     PENDING = "pending"
     STARTED = "started"
     RETRY = "retry"
@@ -15,8 +16,18 @@ class JobStatus(str, Enum):
     SUCCESS = "success"
 
 class JobSchema(BaseModel):
+    """ A pending status may imply the job is unknown or does not exist. """
     id: UUID
     status: JobStatus
+
+    @classmethod
+    def from_async_result(cls, result: AsyncResult) -> JobSchema:
+        return cls(
+            id=result.task_id,
+            status=JobStatus[result.status]
+        )
+
+class JobResultSchema(JobSchema):
     result: Any
     ready: bool
     successful: bool
@@ -29,11 +40,10 @@ class JobSchema(BaseModel):
     finished_date: datetime | None
 
     @classmethod
-    def from_async_result(cls, result: AsyncResult) -> JobSchema:
-        return JobSchema(
-            id=result.task_id,
+    def from_async_result(cls, result: AsyncResult) -> JobResultSchema:
+        return cls(
+            **JobSchema.from_async_result(result).dict(),
             name=result.name,
-            status=JobStatus[result.status],
             result=result.result,
             ready=result.ready(),
             successful=result.successful(),
