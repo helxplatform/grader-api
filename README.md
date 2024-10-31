@@ -32,7 +32,7 @@ uvicorn --reload app.main:app --log-level=info
 ```
 
 It is assumed that you've configured your .env properly. This includes the expectation that a Postgres
-instance, Gitea Assist, message broker, and celery worker(s) are all configured and running.
+instance, Gitea Assist, a Redis instance, and celery worker(s) are all configured and running.
 
 ### Documentation
 The OpenAPI UI is accessible under /docs. To login, first use the login endpoint to get access/refresh tokens.
