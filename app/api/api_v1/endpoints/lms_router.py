@@ -20,14 +20,14 @@ class GradeUpload(BaseModel):
 class UploadGradesBody(BaseModel):
     grades: List[GradeUpload]
 
-@router.post("/lms/downsync", response_model=UUID)
+@router.post("/lms/downsync", response_model=JobSchema)
 async def downsync(
     *,
     db: Session = Depends(get_db),
     perm: None = Depends(PermissionDependency(UserIsInstructorPermission))
 ):
     task = downsync_task.delay()
-    return task.id
+    return JobSchema.from_async_result(task)
 
 @router.post("/lms/downsync/students")
 async def downsync_students(
