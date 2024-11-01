@@ -26,7 +26,7 @@ class LogMiddleware(BaseHTTPMiddleware):
         request._receive = receive
 
     async def dispatch(self, request, call_next):
-        if "health" in request.url.path:
+        if request.url.path.startswith("/api/v1/health"):
             response = await self._execute_request(call_next, request, request_id)
             return
         
