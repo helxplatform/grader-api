@@ -11,8 +11,9 @@ from app.core.utils.async_iterator_wrapper import AsyncIteratorWrapper
 
 class LogMiddleware(BaseHTTPMiddleware):
 
-    def __init__(self, app: FastAPI, *, logger) -> None:
+    def __init__(self, app: FastAPI, *, logger: logging.Logger, file_logger: logging.Logger = None) -> None:
         self._logger = logger
+        self._file_logger = file_logger
         super().__init__(app)
 
     # https://github.com/tiangolo/fastapi/issues/394#issuecomment-927272627
@@ -25,6 +26,10 @@ class LogMiddleware(BaseHTTPMiddleware):
         request._receive = receive
 
     async def dispatch(self, request, call_next):
+        if "health" in request.url.path:
+            response = await self._execute_request(call_next, request, request_id)
+            return
+        
         request_id: str = str(uuid4())
         logging_dict = {
             "X-API-REQUEST-ID": request_id  # X-API-REQUEST-ID maps each request-response to a unique ID
@@ -40,24 +45,20 @@ class LogMiddleware(BaseHTTPMiddleware):
         logging_dict["req"] = request_dict
         logging_dict["res"] = response_dict
 
-        # urlStr = str(request.url)
-        # if urlStr[-5:] != "/docs":
-            # self._logger.info(
-            #     {
-            #         "req": {
-            #             "method": request.method, 
-            #             "url": str(request.url),
-            #             # "body": req_body,
-            #             "user": request.user.onyen if hasattr(request.user, "onyen") else None,
-            #         },
-            #         "res": {
-            #             "status_code": response.status_code
-            #             # "response_time": f"{round((time.time() - start_time) * 1000)} ms",
-            #             # "body": resp_body
-            #         }
-            #     }
-            # )
         self._logger.info(logging_dict)
+        if self._file_logger is not None:
+            resp_body = [section async for section in response.__dict__["body_iterator"]]
+            response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
+
+            try:
+                resp_body = json.loads(resp_body[0])
+            except:
+                resp_body = str(resp_body)
+
+            response_dict["body"] = resp_body
+            logging_dict["res"] = response_dict
+
+            self._file_logger.debug(logging_dict)
 
         return response
     
@@ -68,7 +69,9 @@ class LogMiddleware(BaseHTTPMiddleware):
             path += f"?{request.query_params}"
 
         request_log_dict = {
-            "method": request.method
+            "method": request.method,
+            "endpoint": request.url.path,
+            "user": request.user.onyen if hasattr(request.user, "onyen") else None,
         }
 
         try:
@@ -76,6 +79,7 @@ class LogMiddleware(BaseHTTPMiddleware):
             request_log_dict["body"] = body
         except:
             body = None
+            request_log_dict["body"] = None
 
         return request_log_dict
     
@@ -93,18 +97,8 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         response_log_dict = {
             "status_code": response.status_code,
-            "execution_time": f"{execution_time:0.4f}s"
+            "execution_time": f"{execution_time:0.4f}s",
         }
-
-        # resp_body = [section async for section in response.__dict__["body_iterator"]]
-        # response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
-
-        # try:
-        #     resp_body = json.loads(resp_body[0].decode())
-        # except:
-        #     resp_body = str(resp_body)
-
-        # response_log_dict["body"] = resp_body
 
         return response, response_log_dict
 

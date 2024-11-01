@@ -1,6 +1,7 @@
+from logging.handlers import RotatingFileHandler
 import sys
 from typing import List
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware import Middleware
 from fastapi_pagination import add_pagination
@@ -17,12 +18,31 @@ import logging
 from pathlib import Path
 
 logging.getLogger("uvicorn.access").disabled = True
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+
+# Configure logging
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+root_logger = logging.getLogger()
+root_logger.disabled = True
+for handler in root_logger.handlers[:]:
+    root_logger.removeHandler(handler)
+
+
+logger = logging.getLogger("uvicorn")
+logger.setLevel(logging.INFO)
 stream_handler = logging.StreamHandler(sys.stdout)
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
+
+if settings.DEV_PHASE == "prod":
+    file_logger = logging.getLogger("file-logger")
+    file_logger.handlers.clear()
+    file_logger.setLevel(logging.DEBUG)
+    file_handler = RotatingFileHandler("logs/debug.log", maxBytes=1024*1024*100, backupCount=4)
+    file_handler.setFormatter(formatter)
+    file_logger.addHandler(file_handler)
+else:
+    file_logger = None
+
 
 def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -64,7 +84,8 @@ def make_middleware() -> List[Middleware]:
         ),
         Middleware(
             LogMiddleware, 
-            logger=logger
+            logger=logger,
+            file_logger=file_logger
         )
     ]
 
@@ -83,10 +104,6 @@ async def custom_exception_handler(request: Request, exc: CustomException):
         content=content,
     )
 
-# if not settings.DISABLE_LOGGER:
-    # logger = CustomizeLogger.make_logger(config_path)
-    # app.logger = logger
-    # app.add_middleware(LogMiddleware, logger=logger)
 init_monkeypatch()
 init_routers(app)
 add_pagination(app)

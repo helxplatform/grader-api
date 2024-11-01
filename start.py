@@ -1,9 +1,5 @@
-import logging
 import os
 import glob
-import sys
-import pythonjsonlogger
-import pythonjsonlogger.jsonlogger
 import uvicorn
 import asyncio
 from dotenv import load_dotenv
@@ -12,68 +8,6 @@ from alembic import command
 from app.services import LmsSyncService
 from app.database import SessionLocal
 
-log_config = uvicorn.config.LOGGING_CONFIG
-log_config["loggers"]["uvicorn.access"]["level"] = "CRITICAL"
-# log_config = {
-#   'version': 1, 
-#   'disable_existing_loggers': True, 
-#   'formatters': {
-#     'default': {
-#       '()': 'uvicorn.logging.DefaultFormatter', 
-#       'fmt': '%(asctime)s %(levelname)s %(message)s', 
-#       'use_colors': True
-#     },
-#   }, 
-#   'handlers': {
-#     'default': {
-#       'formatter': 'default', 
-#       'class': 'logging.StreamHandler', 
-#       'stream': sys.stdout
-#     },
-#     'error': {
-#       'formatter': 'default', 
-#       'class': 'logging.StreamHandler', 
-#       'stream': sys.stderr
-#     },
-#   }, 
-#   'loggers': {
-#     'uvicorn': {
-#       'handlers': ['default'], 
-#       'level': 'INFO', 
-#       'propagate': False
-#     }, 
-#     'uvicorn.error': {
-#       'handlers': ['error'],
-#       'level': 'INFO'
-#     }, 
-#   }
-# }
-# logging_config = {
-#   "version": 1,
-#   "disable_existing_loggers": True,
-#   "formatters": {
-#     "default": {
-#       "format": "%(asctime)s %(levelname)s %(message)s"
-#     }
-#   },
-#   "handlers": {
-#     "default": {
-#       "level": "INFO",
-#       "class": "logging.StreamHandler",
-#       "formatter": "default",
-#       "stream": sys.stdout
-#     }
-#   },
-#   "loggers": { 
-#     "uvicorn": {
-#       "handlers": ["default"],
-#       "level": "INFO",
-#       "propagate": True
-#     },
-#   }
-# #   "rotation": "20 days",
-# #   "retention": "12 months"
-# }
 
 def positive_int(value):
     ivalue = int(value)
