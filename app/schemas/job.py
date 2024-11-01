@@ -10,10 +10,12 @@ from celery.result import AsyncResult
 class JobStatus(str, Enum):
     """ Pending may indicate an unknown or nonexistent task. """
     PENDING = "pending"
+    RECEIVED = "received"
     STARTED = "started"
     RETRY = "retry"
     FAILURE = "failure"
     SUCCESS = "success"
+    REVOKED = "revoked"
 
 class JobSchema(BaseModel):
     """ A pending status may imply the job is unknown or does not exist. """

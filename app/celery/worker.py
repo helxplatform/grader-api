@@ -56,5 +56,14 @@ def get_task_ids_by_name(
 def get_task_result_by_id(task_id: str) -> AsyncResult:
     return celery_app.AsyncResult(task_id)
 
-def cancel_task_by_id(task_id: str):
+def revoke_task_by_id(task_id: str, terminate=False):
+    kill_kwargs = { "terminate": True, "signal": "SIGTERM" } if terminate else {}
+    celery_app.control.revoke(task_id, **kill_kwargs)
+
+def dangerous_forcekill_task_by_id(task_id: str):
+    """ NOTE: Be VERY careful about sending a SIGKILL to a running task.
+    It's unlikely but possible to cause situations where state consistency
+    is not recovered before termination (e.g., a task is killed after inserting some
+    row into the DB, but before it can propagate it to Gitea). 
+    """
     celery_app.control.revoke(task_id, terminate=True, signal="SIGKILL")
