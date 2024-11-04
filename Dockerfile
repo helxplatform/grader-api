@@ -9,9 +9,10 @@ RUN apt-get update && apt-get install -y rsync
 # Add the current directory contents into the container at /app
 ADD . .
 
-# Remove the .env.sample file from the image if it exists
-RUN ls .env.sample && rm .env.sample
+# Remove the .env.sample and .env files from the image if they exist
+RUN rm -f .env.sample && rm -f .env
 
+# Create the debug.log file and make it group read-writable
 RUN mkdir logs && touch logs/debug.log && chmod g+rw logs/debug.log
 
 # Install any needed packages specified in requirements.txt
