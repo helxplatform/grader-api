@@ -27,14 +27,16 @@ def init_logging():
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
 
-def init_uvicorn_logger(formatter):
+def init_uvicorn_logger(formatter) -> logging.Logger:
     logger = logging.getLogger("uvicorn")
     logger.setLevel(logging.INFO)
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
+    return logger
 
-def init_file_logger(formatter):
+def init_file_logger(formatter) -> logging.Logger | None:
+    file_logger = None
     if settings.DEV_PHASE == "prod":
         file_logger = logging.getLogger("file-logger")
         file_logger.handlers.clear()
@@ -42,8 +44,8 @@ def init_file_logger(formatter):
         file_handler = RotatingFileHandler("logs/debug.log", maxBytes=1024*1024*100, backupCount=4)
         file_handler.setFormatter(formatter)
         file_logger.addHandler(file_handler)
-    else:
-        file_logger = None
+    return file_logger
+    
     
 init_logging()
 uvicorn_logger = init_uvicorn_logger(formatter)
