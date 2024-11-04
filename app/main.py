@@ -17,32 +17,37 @@ from app.core.exceptions import CustomException
 import logging
 from pathlib import Path
 
-logging.getLogger("uvicorn.access").disabled = True
 
-# Configure logging
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-root_logger = logging.getLogger()
-root_logger.disabled = True
-for handler in root_logger.handlers[:]:
-    root_logger.removeHandler(handler)
 
+def init_logging():
+    logging.getLogger("uvicorn.access").disabled = True
+    root_logger = logging.getLogger()
+    root_logger.disabled = True
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
 
-logger = logging.getLogger("uvicorn")
-logger.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler(sys.stdout)
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
+def init_uvicorn_logger(formatter):
+    logger = logging.getLogger("uvicorn")
+    logger.setLevel(logging.INFO)
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
 
-if settings.DEV_PHASE == "prod":
-    file_logger = logging.getLogger("file-logger")
-    file_logger.handlers.clear()
-    file_logger.setLevel(logging.DEBUG)
-    file_handler = RotatingFileHandler("logs/debug.log", maxBytes=1024*1024*100, backupCount=4)
-    file_handler.setFormatter(formatter)
-    file_logger.addHandler(file_handler)
-else:
-    file_logger = None
-
+def init_file_logger(formatter):
+    if settings.DEV_PHASE == "prod":
+        file_logger = logging.getLogger("file-logger")
+        file_logger.handlers.clear()
+        file_logger.setLevel(logging.DEBUG)
+        file_handler = RotatingFileHandler("logs/debug.log", maxBytes=1024*1024*100, backupCount=4)
+        file_handler.setFormatter(formatter)
+        file_logger.addHandler(file_handler)
+    else:
+        file_logger = None
+    
+init_logging()
+uvicorn_logger = init_uvicorn_logger(formatter)
+file_logger = init_file_logger(formatter)
 
 def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -84,7 +89,7 @@ def make_middleware() -> List[Middleware]:
         ),
         Middleware(
             LogMiddleware, 
-            logger=logger,
+            logger=uvicorn_logger,
             file_logger=file_logger
         )
     ]
