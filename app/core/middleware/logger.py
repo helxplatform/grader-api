@@ -27,7 +27,7 @@ class LogMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request, call_next):
         if request.url.path.startswith("/api/v1/health"):
-            response = await self._execute_request(call_next, request, request_id)
+            response = await self._execute_request(call_next, request)
             return
         
         request_id: str = str(uuid4())
@@ -86,7 +86,7 @@ class LogMiddleware(BaseHTTPMiddleware):
     async def _create_response_log(self,
                             call_next: Callable,
                             request: Request,
-                            request_id: str
+                            request_id
                             ) -> Response:
 
         start_time = time.perf_counter()
@@ -105,12 +105,13 @@ class LogMiddleware(BaseHTTPMiddleware):
     async def _execute_request(self,
                                call_next: Callable,
                                request: Request,
-                               request_id: str
+                               request_id: str = None
                                ) -> Response:
         try:
             response: Response = await call_next(request)
 
-            response.headers["X-API-Request-ID"] = request_id
+            if request_id is not None:
+                response.headers["X-API-Request-ID"] = request_id
             return response
 
         except Exception as e:
