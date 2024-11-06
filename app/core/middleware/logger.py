@@ -70,7 +70,7 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         request_log_dict = {
             "method": request.method,
-            "endpoint": request.url.path,
+            "endpoint": path,
             "user": request.user.onyen if hasattr(request.user, "onyen") else None,
         }
 

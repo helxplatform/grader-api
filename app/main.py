@@ -37,7 +37,7 @@ def init_uvicorn_logger(formatter) -> logging.Logger:
 
 def init_file_logger(formatter) -> logging.Logger | None:
     file_logger = None
-    if settings.DEV_PHASE == "prod":
+    if settings.DEV_PHASE == DevPhase.PROD:
         file_logger = logging.getLogger("file-logger")
         file_logger.handlers.clear()
         file_logger.setLevel(logging.DEBUG)
