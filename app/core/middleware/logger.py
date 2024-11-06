@@ -29,23 +29,23 @@ class LogMiddleware(BaseHTTPMiddleware):
         if request.url.path.startswith("/api/v1/health"):
             response = await self._execute_request(call_next, request)
             return response
-        
-        request_id: str = str(uuid4())
-        logging_dict = {
-            "X-API-REQUEST-ID": request_id  # X-API-REQUEST-ID maps each request-response to a unique ID
-        }
 
         await self.set_body(request)
+
+        request_id: str = str(uuid4())
         response, response_dict = await self._create_response_log(
             call_next,
             request,
             request_id
         )
-        request_dict = await self._create_request_log(request)
-        logging_dict["req"] = request_dict
-        logging_dict["res"] = response_dict
 
+        logging_dict = {
+            "X-API-REQUEST-ID": request_id,  # X-API-REQUEST-ID maps each request-response to a unique ID
+            "req": await self._create_request_log(request),
+            "res": response_dict
+        }
         self._logger.info(logging_dict)
+
         if self._file_logger is not None:
             resp_body = [section async for section in response.__dict__["body_iterator"]]
             response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
