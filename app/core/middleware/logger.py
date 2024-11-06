@@ -28,7 +28,7 @@ class LogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         if request.url.path.startswith("/api/v1/health"):
             response = await self._execute_request(call_next, request)
-            return
+            return response
         
         request_id: str = str(uuid4())
         logging_dict = {
