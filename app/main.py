@@ -53,6 +53,17 @@ file_logger = init_file_logger(formatter)
 
 def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
+
+def init_listeners():
+    @app.exception_handler(CustomException)
+    async def custom_exception_handler(request: Request, exc: CustomException):
+        content = { "error_code": exc.error_code, "message": exc.message }
+        if settings.DEV_PHASE == DevPhase.DEV:
+            content["stack"] = exc.stack
+        return JSONResponse(
+            status_code=exc.code,
+            content=content,
+        )
     
 def init_monkeypatch():
     ### Monkey patch serializers for custom types
@@ -96,26 +107,14 @@ def make_middleware() -> List[Middleware]:
         )
     ]
 
-def init_listeners():
-    @app.exception_handler(CustomException)
-    async def custom_exception_handler(request: Request, exc: CustomException):
-        content = { "error_code": exc.error_code, "message": exc.message }
-        if settings.DEV_PHASE == DevPhase.DEV:
-            content["stack"] = exc.stack
-        return JSONResponse(
-            status_code=exc.code,
-            content=content,
-        )
-
 def create_app() -> FastAPI:
-
     app = FastAPI(
         openapi_url=f"{ settings.API_V1_STR }/openapi.json",
         middleware=make_middleware()
     )
-    init_listeners()
     init_monkeypatch()
     init_routers(app)
+    init_listeners()
     add_pagination(app)
 
     return app
