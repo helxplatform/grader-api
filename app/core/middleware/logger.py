@@ -1,12 +1,16 @@
 import json
 import logging
+from pydoc import classname
 import time
 from typing import Callable
 from uuid import uuid4
 from fastapi import FastAPI, Response
+from fastapi.responses import JSONResponse
 from starlette.types import Message
 from starlette.requests import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from app.core.config import settings, DevPhase
+from app.core.exceptions.base import CustomException
 from app.core.utils.async_iterator_wrapper import AsyncIteratorWrapper
 
 class LogMiddleware(BaseHTTPMiddleware):
@@ -25,19 +29,47 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         request._receive = receive
 
-    async def dispatch(self, request, call_next):
+    async def dispatch(self, request: Request, call_next: Callable):
         if request.url.path.startswith("/api/v1/health"):
             response = await self._execute_request(call_next, request)
             return response
 
         await self.set_body(request)
 
-        request_id: str = str(uuid4())
+        request_id = str(uuid4())
         response, response_dict = await self._create_response_log(
             call_next,
             request,
             request_id
         )
+
+        resp_body = [section async for section in response.__dict__["body_iterator"]]
+        response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
+
+        try:
+            resp_body = json.loads(resp_body[0])
+        except:
+            resp_body = str(resp_body)
+
+        if "error_code" in resp_body:
+            # If the response contains an error code, that means an exception happened
+            # and we need to log it. So just log the exception and return, don't log
+            # the request as you would normally.
+            request_log = {
+                "path": request.url.path,
+                "method": request.method,
+            }
+            if type(resp_body) is dict:
+                request_log["error_code"] = resp_body["error_code"]
+                request_log["message"] = resp_body["message"]
+                self._logger.error(request_log)
+                self._logger.error(resp_body["stack"])
+            elif type(resp_body) is str:
+                # If the resp_body is of type str because the above json.loads() failed, 
+                # don't add the fields above, just use the whole resp_body
+                request_log["resp_body"] = resp_body
+                self._logger.error(request_log)
+            return response
 
         logging_dict = {
             "X-API-REQUEST-ID": request_id,  # X-API-REQUEST-ID maps each request-response to a unique ID
@@ -47,14 +79,6 @@ class LogMiddleware(BaseHTTPMiddleware):
         self._logger.info(logging_dict)
 
         if self._file_logger is not None:
-            resp_body = [section async for section in response.__dict__["body_iterator"]]
-            response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
-
-            try:
-                resp_body = json.loads(resp_body[0])
-            except:
-                resp_body = str(resp_body)
-
             response_dict["body"] = resp_body
             logging_dict["res"] = response_dict
 
@@ -83,11 +107,12 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         return request_log_dict
     
-    async def _create_response_log(self,
-                            call_next: Callable,
-                            request: Request,
-                            request_id
-                            ) -> Response:
+    async def _create_response_log(
+        self,
+        call_next: Callable,
+        request: Request,
+        request_id
+    ) -> Response:
 
         start_time = time.perf_counter()
         response = await self._execute_request(call_next, request, request_id)
@@ -102,24 +127,22 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         return response, response_log_dict
 
-    async def _execute_request(self,
-                               call_next: Callable,
-                               request: Request,
-                               request_id: str = None
-                               ) -> Response:
+    async def _execute_request(
+        self,
+        call_next: Callable,
+        request: Request,
+        request_id: str = None
+    ) -> Response:
         try:
             response: Response = await call_next(request)
-
             if request_id is not None:
                 response.headers["X-API-Request-ID"] = request_id
             return response
-
         except Exception as e:
-            self._logger.exception(
-                {
-                    "path": request.url.path,
-                    "method": request.method,
-                    "reason": e
-                }
-            )
+            exception_log = {
+                "path": request.url.path,
+                "method": request.method,
+                "reason": e
+            }
+            self._logger.exception(exception_log)
     
