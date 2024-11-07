@@ -96,21 +96,28 @@ def make_middleware() -> List[Middleware]:
         )
     ]
 
-app = FastAPI(
-    openapi_url=f"{ settings.API_V1_STR }/openapi.json",
-    middleware=make_middleware()
-)
+def init_listeners():
+    @app.exception_handler(CustomException)
+    async def custom_exception_handler(request: Request, exc: CustomException):
+        content = { "error_code": exc.error_code, "message": exc.message }
+        if settings.DEV_PHASE == DevPhase.DEV:
+            content["stack"] = exc.stack
+        return JSONResponse(
+            status_code=exc.code,
+            content=content,
+        )
 
-@app.exception_handler(CustomException)
-async def custom_exception_handler(request: Request, exc: CustomException):
-    content = { "error_code": exc.error_code, "message": exc.message }
-    if settings.DEV_PHASE == DevPhase.DEV:
-        content["stack"] = exc.stack
-    return JSONResponse(
-        status_code=exc.code,
-        content=content,
+def create_app() -> FastAPI:
+
+    app = FastAPI(
+        openapi_url=f"{ settings.API_V1_STR }/openapi.json",
+        middleware=make_middleware()
     )
+    init_listeners()
+    init_monkeypatch()
+    init_routers(app)
+    add_pagination(app)
 
-init_monkeypatch()
-init_routers(app)
-add_pagination(app)
+    return app
+
+app = create_app()
