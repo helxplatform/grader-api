@@ -1,16 +1,12 @@
 import json
 import logging
-from pydoc import classname
 import time
 from typing import Callable
 from uuid import uuid4
 from fastapi import FastAPI, Response
-from fastapi.responses import JSONResponse
 from starlette.types import Message
 from starlette.requests import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from app.core.config import settings, DevPhase
-from app.core.exceptions.base import CustomException
 from app.core.utils.async_iterator_wrapper import AsyncIteratorWrapper
 
 class LogMiddleware(BaseHTTPMiddleware):

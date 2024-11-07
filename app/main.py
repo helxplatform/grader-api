@@ -15,8 +15,6 @@ from app.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddle
 from app.core.exceptions import CustomException
 
 import logging
-from pathlib import Path
-
 
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
@@ -54,7 +52,7 @@ file_logger = init_file_logger(formatter)
 def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
-def init_listeners():
+def init_listeners(app: FastAPI):
     @app.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
         content = { "error_code": exc.error_code, "message": exc.message }
@@ -114,7 +112,7 @@ def create_app() -> FastAPI:
     )
     init_monkeypatch()
     init_routers(app)
-    init_listeners()
+    init_listeners(app)
     add_pagination(app)
 
     return app
