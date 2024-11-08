@@ -84,21 +84,17 @@ class LogMiddleware(BaseHTTPMiddleware):
     
     async def _create_request_log(self, request: Request) -> str:
 
-        path = request.url.path
-        if request.query_params:
-            path += f"?{request.query_params}"
-
         request_log_dict = {
             "method": request.method,
-            "endpoint": path,
+            "endpoint": request.url.path,
             "user": request.user.onyen if hasattr(request.user, "onyen") else None,
         }
 
         try:
-            body = await request.json()
-            request_log_dict["body"] = body
-        except:
-            body = None
+            if request.url.path not in self._get_endpoints_to_not_log_req_body():
+                body = await request.json()
+                request_log_dict["body"] = body
+        except Exception as e:
             request_log_dict["body"] = None
 
         return request_log_dict
@@ -142,3 +138,8 @@ class LogMiddleware(BaseHTTPMiddleware):
             }
             self._logger.exception(exception_log)
     
+    def _get_endpoints_to_not_log_req_body(self) -> list[str]:
+        return [
+            "/api/v1/login",
+            "api/v1/refresh"
+        ]
