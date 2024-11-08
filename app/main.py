@@ -1,4 +1,7 @@
+import logging
+import asyncio
 from typing import List
+from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware import Middleware
@@ -10,16 +13,26 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.api_v1 import api_router
 from app.core.config import settings, DevPhase
 from app.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddleware
-from eduhelx_utils.custom_logger import CustomizeLogger
 from app.core.exceptions import CustomException
+from app.services import WebsocketManagerService
+from eduhelx_utils.custom_logger import CustomizeLogger
 
-import logging
-from pathlib import Path
 
 def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
 def init_listeners(app: FastAPI):
+    @app.on_event("startup")
+    async def startup():
+        """ Subscribe to the websockets PubSub channel and process published websocket events. """
+        app.state.pubsub_task = asyncio.create_task(WebsocketManagerService.receive_pubsub_ws_messages())
+
+    @app.on_event("shutdown")
+    async def shutdown():
+        """ Cancel the pubsub task on shutdown. This probably isn't necessary to be honest. """
+        if app.state.pubsub_task is not None:
+            app.state.pubsub_task.cancel()
+            
     @app.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
         content = { "error_code": exc.error_code, "message": exc.message }

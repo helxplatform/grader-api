@@ -10,3 +10,5 @@ from .appstore_service import *
 from .lms_sync_service import *
 from .cleanup_service import *
 from .grading_service import *
+from .websocket_service import *
+from .redis_pubsub_service import *

@@ -1,14 +1,13 @@
 import json
-from redis import Redis
 from celery import Celery
 from celery.result import AsyncResult
+from app.database import redis_broker_client
 from app.core.config import settings
 
-redis_client = Redis.from_url(settings.CELERY_BROKER_URI)
 celery_app = Celery(
     __name__,
     broker=settings.CELERY_BROKER_URI,
-    backend=settings.CELERY_RESULT_BACKEND,
+    backend=settings.CELERY_RESULT_BACKEND_URI,
     result_extended=True
 )
 celery_app.conf.update(
@@ -45,7 +44,7 @@ def get_task_ids_by_name(
 
     # Load pending tasks (still in queue)
     if include_pending:
-        for item in redis_client.lrange("celery", 0, -1):
+        for item in redis_broker_client.lrange("celery", 0, -1):
             task_data = json.loads(item)
             if task_data.get("headers", {}).get("task") == task_name:
                 task_id = task_data["headers"].get("id")

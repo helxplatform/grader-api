@@ -5,10 +5,9 @@ from pathlib import Path
 from datetime import datetime
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
-from app.events import dispatch
+from app.events import event_emitter
 from app.models import StudentModel, AssignmentModel, SubmissionModel
-from app.schemas import SubmissionSchema, DatabaseSubmissionSchema
-from app.events import CreateSubmissionCrudEvent
+from app.schemas import SubmissionSchema, DatabaseSubmissionSchema, SubmissionCrudEvent, CrudType
 from app.core.exceptions import SubmissionNotFoundException
 from app.core.utils.datetime import get_now_with_tzinfo
 
@@ -43,7 +42,9 @@ class SubmissionService:
         self.session.add(submission)
         self.session.commit()
 
-        dispatch(CreateSubmissionCrudEvent(submission=submission))
+        try:
+            await event_emitter.emit_async(SubmissionCrudEvent(resource=submission, crud_type=CrudType.CREATE))
+        except: pass
 
         return submission
     

@@ -26,7 +26,10 @@ fastapi-events==0.11.1
 jupyter-server
 ipykernel
 nbconvert==7.8.0
-celery[redis]==5.4.0
+celery[redis,eventlet]==5.4.0
+redis==5.2.0
+eventlet==0.37.0
 celery-singleton==0.3.1
 flower==2.0.1
+pymitter==0.5.1
 git+https://github.com/helxplatform/eduhelx-utils.git

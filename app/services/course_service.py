@@ -1,10 +1,9 @@
 from app.core.config import settings
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
-from app.events import dispatch
+from app.events import event_emitter
 from app.models import CourseModel
-from app.schemas import CourseWithInstructorsSchema, CourseSchema, UpdateCourseSchema
-from app.events import CreateCourseCrudEvent, ModifyCourseCrudEvent
+from app.schemas import CourseWithInstructorsSchema, CourseSchema, UpdateCourseSchema, CourseCrudEvent, CrudType
 from app.core.exceptions import MultipleCoursesExistException, NoCourseExistsException, CourseAlreadyExistsException
 
 class CourseService:
@@ -105,7 +104,10 @@ class CourseService:
         course.master_remote_url = master_remote_url
         self.session.commit()
 
-        dispatch(CreateCourseCrudEvent(course=course))
+        try:
+            await event_emitter.emit_async(CourseCrudEvent(resource=course, crud_type=CrudType.CREATE))
+        except: pass
+
         print("DONE CREATING COURSE")
         return course
     
@@ -121,7 +123,15 @@ class CourseService:
 
         self.session.commit()
 
-        dispatch(ModifyCourseCrudEvent(course=course, modified_fields=list(update_fields.keys())))
+        try:
+            await event_emitter.emit_async(
+                CourseCrudEvent(
+                    resource=course,
+                    crud_type=CrudType.MODIFY, 
+                    modified_fields=list(update_fields.keys())
+                )
+            )
+        except: pass
 
         return course
 

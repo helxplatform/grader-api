@@ -40,7 +40,10 @@ class Settings(BaseSettings):
     BROKER_PASSWORD: str
 
     CELERY_BROKER_URI: Optional[str] = None # computed
-    CELERY_RESULT_BACKEND: Optional[str] = None # computed
+    CELERY_RESULT_BACKEND_URI: Optional[str] = None # computed
+    # Techincally, we could use either of the above as the general database as well,
+    # but using a new database helps with organization
+    REDIS_GENERAL_DATABASE_URI: Optional[str] = None # computed
 
     # Gitea
     GITEA_SSH_URL: str
@@ -109,14 +112,23 @@ class Settings(BaseSettings):
         port = values.get("BROKER_PORT")
         return f"redis://{ user }:{ pw }@{ host }:{ port }/0"
     
-    @validator("CELERY_RESULT_BACKEND", pre=True)
-    def assemble_result_backend(cls, v: Optional[str], values: Dict[str, Any]) -> str:
+    @validator("CELERY_RESULT_BACKEND_URI", pre=True)
+    def assemble_result_backend_uri(cls, v: Optional[str], values: Dict[str, Any]) -> str:
         if isinstance(v, str): return v
         user = values.get("BROKER_USER")
         pw = values.get("BROKER_PASSWORD")
         host = values.get("BROKER_HOST")
         port = values.get("BROKER_PORT")
         return f"redis://{ user }:{ pw }@{ host }:{ port }/1"
+
+    @validator("REDIS_GENERAL_DATABASE_URI", pre=True)
+    def assemble_redis_general_connection_uri(cls, v: Optional[str], values: Dict[str, Any]) -> str:
+        if isinstance(v, str): return v
+        user = values.get("BROKER_USER")
+        pw = values.get("BROKER_PASSWORD")
+        host = values.get("BROKER_HOST")
+        port = values.get("BROKER_PORT")
+        return f"redis://{ user }:{ pw }@{ host }:{ port }/2"
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
     def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> str:
