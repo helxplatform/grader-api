@@ -3,7 +3,7 @@ from typing import Iterable
 from fastapi import WebSocket
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-from app.services import UserService, RedisPubsubService
+from app.services import RedisPubsubService
 from app.models.user import UserModel, UserType
 from app.schemas import WebsocketMessage, WebsocketErrorMessage, PubsubWSMessage
 

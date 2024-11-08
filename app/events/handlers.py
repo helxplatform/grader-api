@@ -1,7 +1,6 @@
 from app.database import SessionLocal
 from app.schemas import CrudEvent, AssignmentCrudEvent, ResourceType
 from app.events.emitter import event_emitter
-from app.core.dependencies import get_db_persistent
 
 """
 NOTE: Keep in mind that exceptions raised in event handlers bubble up to the original emitter.

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from .websocket import WebsocketMessage
+from app.schemas.websocket import WebsocketMessage
 
 # At the moment. we have no fields defined for a generalized pubsub message.
 # You can encode any JSON-serializable schema. I've defined it as such in case

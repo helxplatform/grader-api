@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Optional
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
-from app.schemas import CrudEvent, CrudType, ResourceType
+from app.schemas.events import CrudEvent, CrudType, ResourceType
 
 # General definition for an emittable websocket message
 class WebsocketMessage(BaseModel):
