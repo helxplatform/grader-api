@@ -55,7 +55,7 @@ async def publish_crud_operation(event: CrudEvent):
         student_service = StudentService(session)
         instructor_service = InstructorService(session)
 
-        all_users = user_service.list_users()
+        all_users = await user_service.list_users()
         students = [u for u in all_users if isinstance(u, StudentModel)]
         instructors = [u for u in all_users if isinstance(u, InstructorModel)]
 

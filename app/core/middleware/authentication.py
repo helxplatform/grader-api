@@ -17,7 +17,12 @@ class AuthBackend(AuthenticationBackend):
         self, conn: HTTPConnection
     ) -> Tuple[bool, Optional[CurrentUser]]:
         current_user = CurrentUser()
+
+        from_qs = False
         authorization: str = conn.headers.get("Authorization")
+        if not authorization:
+            authorization = conn.query_params.get("authorization")
+            from_qs = True
         
         if settings.DISABLE_AUTHENTICATION:
             return await self.handle_impersonated_auth()
@@ -26,7 +31,11 @@ class AuthBackend(AuthenticationBackend):
             return False, current_user
 
         try:
-            scheme, credentials = authorization.split(" ")
+            if from_qs:
+                scheme, credentials = "Bearer", authorization
+            else:
+                scheme, credentials = authorization.split(" ")
+
             if scheme.lower() != "bearer":
                 return False, current_user
         except ValueError:

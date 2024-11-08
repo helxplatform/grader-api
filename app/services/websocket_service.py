@@ -75,7 +75,8 @@ class WebsocketManagerService:
         await cls._pubsub_service.subscribe(PUBSUB_WS_CHANNEL)
         try:
             while True:
-                message = await cls._pubsub_service.pubsub.get_message(ignore_subscribe_messages=True)
+                # We use a shorter timeout here so that app shutdown is more efficient.
+                message = await cls._pubsub_service.pubsub.get_message(timeout=2.5, ignore_subscribe_messages=True)
                 if message is not None:
                     channel = message["channel"]
                     ps_data = json.loads(message["data"].decode("utf-8"))
@@ -87,6 +88,10 @@ class WebsocketManagerService:
                     for user_id in user_ids: clients.update(cls._get_connections_for_id(user_id))
 
                     # Emit encapsulated websocket message to clients.
+                    # print("----EMITTING WS MESSAGE TO CLIENTS----")
+                    # print("DATA:", data)
+                    # print("CLIENTS:", user_ids)
+                    # print("CLIENT LIST:", clients)
                     for client in clients: await cls._send_raw_message_to_client(client, data)
         finally:
             await cls._pubsub_service.unsubscribe(PUBSUB_WS_CHANNEL)

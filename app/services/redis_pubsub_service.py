@@ -21,6 +21,6 @@ class RedisPubsubService:
         await self.pubsub.unsubscribe(*channels)
 
     @staticmethod
-    async def publish(self, channel: str, message: PubsubMessage) -> None:
-        serialized_message = json.dumps(message.dict())
+    async def publish(channel: str, message: PubsubMessage) -> None:
+        serialized_message = message.json()
         await redis_general_async_client.publish(channel, serialized_message)

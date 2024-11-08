@@ -31,17 +31,17 @@ class CrudEvent(PydanticEvent):
         arbitrary_types_allowed = True
 
 class CourseCrudEvent(CrudEvent):
-    resource_type: ResourceType.COURSE
     resource: CourseModel
+    resource_type = ResourceType.COURSE
 
 class UserCrudEvent(CrudEvent):
-    resource_type: ResourceType.USER
     resource: UserModel
+    resource_type = ResourceType.USER
 
 class AssignmentCrudEvent(CrudEvent):
-    resource_type: ResourceType.ASSIGNMENT
     resource: AssignmentModel
+    resource_type = ResourceType.ASSIGNMENT
 
 class SubmissionCrudEvent(CrudEvent):
-    resource_type: ResourceType.SUBMISSION
     resource: SubmissionModel
+    resource_type = ResourceType.SUBMISSION
