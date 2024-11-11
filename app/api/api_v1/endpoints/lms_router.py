@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Request, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 from app.celery.tasks import downsync_task
-from app.services import LmsSyncService, AssignmentService
+from app.services import LmsSyncService, AssignmentService, JobStatusService
 from app.schemas import JobSchema
 from app.core.dependencies import (
     get_db, PermissionDependency,
@@ -29,18 +29,12 @@ async def downsync(
     task = downsync_task.delay()
     return JobSchema.from_async_result(task)
 
-@router.post("/lms/downsync/students")
-async def downsync_students(
+@router.get("/lms/downsync/status", response_model=JobSchema | None)
+async def get_downsync_job(
     *,
     db: Session = Depends(get_db),
     perm: None = Depends(PermissionDependency(UserIsInstructorPermission))
 ):
-    return await LmsSyncService(db).sync_students()
-
-@router.post("/lms/downsync/assignments")
-async def downsync_assignments(
-    *,
-    db: Session = Depends(get_db),
-    perm: None = Depends(PermissionDependency(UserIsInstructorPermission))
-):
-    return await LmsSyncService(db).sync_assignments()
+    status = JobStatusService(db).get_singleton_job_status(downsync_task)
+    if status is None: return None
+    return JobSchema.from_orm(status)

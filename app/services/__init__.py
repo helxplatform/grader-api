@@ -12,3 +12,4 @@ from .cleanup_service import *
 from .grading_service import *
 from .redis_pubsub_service import *
 from .websocket_service import *
+from .job_status_service import *
