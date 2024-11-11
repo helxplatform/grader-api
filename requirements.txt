@@ -22,7 +22,6 @@ python-multipart==0.0.9
 otter-grader==5.5.0
 python-dateutil===2.9.0
 numpy==2.0.0
-fastapi-events==0.11.1
 jupyter-server
 ipykernel
 nbconvert==7.8.0

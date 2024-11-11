@@ -5,7 +5,7 @@ from starlette.authentication import AuthenticationBackend
 from starlette.middleware.authentication import (
     AuthenticationMiddleware as BaseAuthenticationMiddleware,
 )
-from starlette.requests import HTTPConnection
+from starlette.requests import HTTPConnection, Request
 from app.core.config import settings
 
 class CurrentUser(BaseModel, validate_assignment=True):
@@ -17,25 +17,24 @@ class AuthBackend(AuthenticationBackend):
         self, conn: HTTPConnection
     ) -> Tuple[bool, Optional[CurrentUser]]:
         current_user = CurrentUser()
+        authorization: str | None = None
 
-        from_qs = False
-        authorization: str = conn.headers.get("Authorization")
-        if not authorization:
-            authorization = conn.query_params.get("authorization")
-            from_qs = True
-        
         if settings.DISABLE_AUTHENTICATION:
             return await self.handle_impersonated_auth()
+        print("IS HANDSHAKE", self.is_websocket_handshake(conn))
+        if self.is_websocket_handshake(conn):
+            # We only allow query param-based authentication for websocket handshakes,
+            # due to limitation of the browser WS API.
+            authorization = conn.query_params.get("authorization")
+            if authorization is not None: authorization = f"Bearer { authorization }"
+        else:
+            authorization = conn.headers.get("Authorization")
 
         if not authorization:
             return False, current_user
 
         try:
-            if from_qs:
-                scheme, credentials = "Bearer", authorization
-            else:
-                scheme, credentials = authorization.split(" ")
-
+            scheme, credentials = authorization.split(" ")
             if scheme.lower() != "bearer":
                 return False, current_user
         except ValueError:
@@ -77,7 +76,12 @@ class AuthBackend(AuthenticationBackend):
                 return True, current_user
             except UserNotFoundException:
                 return False, current_user
-
+            
+    def is_websocket_handshake(self, conn: HTTPConnection) -> bool:
+        return conn.scope["type"] == "websocket" \
+            and conn.headers.get("connection", "").lower() == "upgrade" \
+            and conn.headers.get("upgrade", "").lower() == "websocket" \
+            and conn.headers.get("sec-websocket-key") is not None \
 
 
 class AuthenticationMiddleware(BaseAuthenticationMiddleware):

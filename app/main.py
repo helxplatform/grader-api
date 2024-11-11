@@ -6,10 +6,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware import Middleware
 from fastapi_pagination import add_pagination
-from fastapi_events.middleware import EventHandlerASGIMiddleware
-from fastapi_events.handlers.local import local_handler
 from starlette.middleware.cors import CORSMiddleware
-
 from app.api.api_v1 import api_router
 from app.core.config import settings, DevPhase
 from app.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddleware
@@ -73,10 +70,6 @@ def make_middleware() -> List[Middleware]:
             AuthenticationMiddleware,
             backend=AuthBackend(),
             on_error=on_auth_error
-        ),
-        Middleware(
-            EventHandlerASGIMiddleware,
-            handlers=[local_handler]
         )
     ]
 
