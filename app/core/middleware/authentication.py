@@ -21,7 +21,7 @@ class AuthBackend(AuthenticationBackend):
 
         if settings.DISABLE_AUTHENTICATION:
             return await self.handle_impersonated_auth()
-        print("IS HANDSHAKE", self.is_websocket_handshake(conn))
+        
         if self.is_websocket_handshake(conn):
             # We only allow query param-based authentication for websocket handshakes,
             # due to limitation of the browser WS API.
