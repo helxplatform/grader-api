@@ -1,4 +1,5 @@
 import inspect
+import asyncio
 from celery.signals import (
     task_received, task_internal_error, task_revoked,
     task_success, task_failure, task_retry, task_prerun
@@ -8,77 +9,55 @@ from celery_singleton.config import Config
 from celery_singleton.backends import get_backend
 from app.celery.worker import celery_app
 from app.database import SessionLocal
+from app.services import WebsocketManagerService, JobStatusService, InstructorService
 from app.models.job_status import JobStatusModel, JobStatus
+from app.schemas import JobSchema, WebsocketJobStatusMessage
+
+def handle_job_status_update(job_id: str, job_type: str | None, job_status: JobStatus) -> None:
+    """ Store a job status update in the database and dispatch a websocket event. """
+    async def _handle_job_status_update():
+        with SessionLocal() as session:
+            job_status_model = JobStatusService(session).create_job_status_update(job_id, job_type, job_status)
+            ws_message = WebsocketJobStatusMessage(
+                data=JobSchema.from_orm(job_status_model)
+            )
+            
+            if job_type == "downsync":
+                user_list = await InstructorService(session).list_instructors()
+            else:
+                user_list = []
+
+            WebsocketManagerService.publish_sync_pubsub_ws_message(ws_message, user_list)
+    
+    asyncio.run(_handle_job_status_update())
 
 @task_received.connect
 def task_received_handler(request, **kw):
-    with SessionLocal() as session:
-        session.add(JobStatusModel(
-            id=request.task_id,
-            type=request.task_name,
-            status=JobStatus.RECEIVED
-        ))
-        session.commit()
+    handle_job_status_update(request.task_id, request.task_name, JobStatus.RECEIVED)
 
 @task_prerun.connect
 def task_prerun_handler(sender=None, task_id=None, **kw):
-    with SessionLocal() as session:
-        session.add(JobStatusModel(
-            id=task_id,
-            type=sender.name,
-            status=JobStatus.STARTED
-        ))
-        session.commit()
+    handle_job_status_update(task_id, sender.name, JobStatus.STARTED)
 
 @task_success.connect
 def task_success_handler(sender=None, result=None, **kw):
-    with SessionLocal() as session:
-        session.add(JobStatusModel(
-            id=sender.request.id,
-            type=sender.name,
-            status=JobStatus.SUCCESS
-        ))
-        session.commit()
+    handle_job_status_update(sender.request.id, sender.name, JobStatus.SUCCESS)
 
 @task_failure.connect
 def task_failure_handler(sender=None, task_id=None, **kw):
-    with SessionLocal() as session:
-        session.add(JobStatusModel(
-            id=task_id,
-            type=sender.name,
-            status=JobStatus.FAILURE
-        ))
-        session.commit()
+    handle_job_status_update(task_id, sender.name, JobStatus.FAILURE)
 
 @task_internal_error.connect
 def task_internal_error_handler(sender=None, task_id=None, **kw):
-    with SessionLocal() as session:
-        session.add(JobStatusModel(
-            id=task_id,
-            type=sender.name,
-            status=JobStatus.FAILURE
-        ))
-        session.commit()
+    handle_job_status_update(task_id, sender.name, JobStatus.FAILURE)
 
 @task_retry.connect
 def task_retry_handler(sender=None, request=None, **kw):
-    with SessionLocal() as session:
-        session.add(JobStatusModel(
-            id=request.task_id,
-            type=request.task_name,
-            status=JobStatus.RETRY
-        ))
-        session.commit()
+    handle_job_status_update(request.task_id, request.task_name, JobStatus.RETRY)
 
 @task_revoked.connect
 def task_revoked_handler(sender=None, request=None, **kw):
-    with SessionLocal() as session:
-        session.add(JobStatusModel(
-            id=request.task_id,
-            type=request.task_name,
-            status=JobStatus.REVOKED
-        ))
-        session.commit()
+    handle_job_status_update(request.task_id, request.task_name, JobStatus.REVOKED)
 
 """ Source: https://github.com/steinitzu/celery-singleton/issues/29 """
 @task_revoked.connect

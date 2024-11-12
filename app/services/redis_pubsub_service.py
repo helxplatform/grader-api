@@ -1,6 +1,6 @@
 import json
 import redis
-from app.database import redis_general_async_client
+from app.database import redis_general_async_client, redis_general_client
 from app.schemas import PubsubMessage
 
 """ A particular instance of this service can be used to subscribe to different sets of channels.
@@ -24,3 +24,8 @@ class RedisPubsubService:
     async def publish(channel: str, message: PubsubMessage) -> None:
         serialized_message = message.json()
         await redis_general_async_client.publish(channel, serialized_message)
+
+    @staticmethod
+    def publish_sync(channel: str, message: PubsubMessage) -> None:
+        serialized_message = message.json()
+        redis_general_client.publish(channel, serialized_message)

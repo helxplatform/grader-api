@@ -3,6 +3,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 from app.schemas.events import CrudEvent, CrudType, ResourceType
+from app.schemas.job import JobSchema
 
 # General definition for an emittable websocket message
 class WebsocketMessage(BaseModel):
@@ -40,3 +41,7 @@ class WebsocketCrudMessage(WebsocketMessage):
     @classmethod
     def from_crud_event(cls, crud_event: CrudEvent, resource_id: int) -> WebsocketCrudMessage:
         return cls(data=CrudPayload.from_crud_event(crud_event, resource_id))
+    
+class WebsocketJobStatusMessage(WebsocketMessage):
+    event_name = "job_status_event"
+    data: JobSchema

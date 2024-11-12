@@ -104,3 +104,14 @@ class WebsocketManagerService:
             user_ids=[u.id for u in users]
         )
         await RedisPubsubService.publish(PUBSUB_WS_CHANNEL, ps_message)
+
+    @staticmethod
+    def publish_sync_pubsub_ws_message(websocket_message: WebsocketMessage, users: Iterable[UserModel]):
+        """ Synchronously publish a pubsub event encapsulating a websocket event to emit to clients.
+        Pubsub channels cannot be published to asynchronously from Celery workers.
+        """
+        ps_message = PubsubWSMessage(
+            websocket_message=websocket_message,
+            user_ids=[u.id for u in users]
+        )
+        RedisPubsubService.publish_sync(PUBSUB_WS_CHANNEL, ps_message)

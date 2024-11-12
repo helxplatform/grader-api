@@ -7,8 +7,19 @@ class JobStatusService:
     def __init__(self, session: Session):
         self.session = session
 
+    def create_job_status_update(self, job_id: str | UUID, job_type: str | None, job_status: JobStatus) -> JobStatusModel:
+        status_update = JobStatusModel(
+            id=job_id,
+            type=job_type,
+            status=job_status
+        )
+        self.session.add(status_update)
+        self.session.commit()
+
+        return status_update
+
     def get_status_logs_for_job(self, job_id: str | UUID) -> list[JobStatusModel]:
-        return self.session.query(JobStatusModel).filter_by(id=job_id).all()
+        return self.session.query(JobStatusModel).filter_by(id=str(job_id)).all()
 
     def get_singleton_job_status(self, job: str | Task) -> JobStatusModel | None:
         """ This takes the either the job name or the literal job function, as in decorated by @app.task(name='', ...) """
