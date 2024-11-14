@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from app.services import RedisPubsubService
 from app.models.user import UserModel, UserType
-from app.schemas import WebsocketMessage, WebsocketErrorMessage, PubsubWSMessage
+from app.schemas import WebsocketMessage, PubsubWSMessage
 
 PUBSUB_WS_CHANNEL = "websocket_messages"
 

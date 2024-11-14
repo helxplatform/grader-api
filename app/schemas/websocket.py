@@ -13,13 +13,6 @@ class WebsocketMessage(BaseModel):
     originator: Optional[UUID]
     data: Optional[BaseModel]
 
-# General definition for an emittable websocket message indicating an error of some kind
-class WebsocketErrorMessage(WebsocketMessage):
-    exception: Exception
-
-    class Config:
-        arbitrary_types_allowed = True
-
 
 class CrudPayload(BaseModel):
     crud_type: CrudType
