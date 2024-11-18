@@ -1,12 +1,14 @@
 # Workflow responsible for the 
 # development release processes.
+
 name: Build-Push-Dev-Image
 on:
    push:
     branches:
       - develop
       - develop-v1
-      - ghactions
+      - ghactions # remove after
+     # - develop-v2 uncomment when implemented
     paths-ignore:
       - README.md
       # - .github/*
