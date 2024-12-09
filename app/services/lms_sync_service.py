@@ -1,11 +1,13 @@
 import asyncio
+import os.path
 from typing import BinaryIO
 from sqlalchemy.orm import Session
 from app.core.config import settings
-from app.services.canvas_service import CanvasService, UpdateCanvasAssignmentBody
+from app.services.canvas_service import CanvasService, UpdateCanvasAssignmentBody, DuplicateFileAction
 from app.services.course_service import CourseService
 from app.services.ldap_service import LDAPService
 from app.services.assignment_service import AssignmentService
+from app.services.grading_service import GradingService
 from app.services.user.student_service import StudentService
 from app.services.user.instructor_service import InstructorService
 from app.models import AssignmentModel, SubmissionModel
@@ -23,6 +25,7 @@ class LmsSyncService:
         self.assignment_service = AssignmentService(session)
         self.student_service = StudentService(session)
         self.instructor_service = InstructorService(session)
+        self.grading_service = GradingService(session)
         self.ldap_service = LDAPService()
         self.session = session
 
@@ -40,19 +43,13 @@ class LmsSyncService:
                 print("COURSE EXISTS ALREADY")
                 #update the existing course
                 await self.course_service.update_course(UpdateCourseSchema(
-                    name=canvas_course["name"],
-                    start_at=canvas_course["start_at"],
-                    end_at=canvas_course["end_at"]
+                    name=canvas_course["name"]
                 ))
                 print("UPDATED COURSE")
 
         except NoCourseExistsException as e:
             print("CREATING COURSE (LMS)", e)
-            return await CourseService(self.session).create_course(
-                name=canvas_course['name'], 
-                start_at=canvas_course['start_at'], 
-                end_at=canvas_course['end_at']
-            )
+            return await CourseService(self.session).create_course(name=canvas_course['name'])
 
 
     async def sync_assignments(self):
@@ -191,12 +188,32 @@ class LmsSyncService:
                 await self.canvas_service.associate_pid_to_user(user_info.onyen, pid)
 
         return canvas_instructors
+    
+    async def upsync_submission(
+        self,
+        submission: SubmissionModel,
+        student_notebook_content: bytes
+    ):
+        user_pid = await self.canvas_service.get_pid_from_onyen(submission.student.onyen)
+        
+        # If this course runs on a 2U Digital Campus instance, append ":UNC" to the PID
+        if "digitalcampus" in settings.CANVAS_API_URL:
+            user_pid += ":UNC"
+
+        student = await self.canvas_service.get_student_by_pid(user_pid)
+        student_notebook_upload = await self.grading_service.get_student_notebook_upload(submission, student_notebook_content)
+        await self.canvas_service.upload_submission(
+            assignment_id=submission.assignment.id,
+            user_id=student["id"],
+            student_notebook=student_notebook_upload,
+            comments=None
+        )
 
     async def upsync_grade(
         self,
         submission: SubmissionModel,
-        grade_percent: float,
-        student_notebook: BinaryIO,
+        # between [0,1]
+        grade_proportion: float,
         comments: str | None = None,
     ):
         user_pid = await self.canvas_service.get_pid_from_onyen(submission.student.onyen)
@@ -206,11 +223,10 @@ class LmsSyncService:
             user_pid += ":UNC"
 
         student = await self.canvas_service.get_student_by_pid(user_pid)
-        await self.canvas_service.upload_grade(
+        await self.canvas_service.upload_assignment_grade(
             assignment_id=submission.assignment.id,
             user_id=student["id"],
-            grade_percent=grade_percent,
-            student_notebook=student_notebook,
+            grade_proportion=grade_proportion,
             comments=comments
         )
             

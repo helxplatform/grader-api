@@ -1,10 +1,10 @@
-from datetime import datetime, timedelta
+from app.core.config import settings
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from app.events import dispatch
 from app.models import CourseModel
 from app.schemas import CourseWithInstructorsSchema, CourseSchema, UpdateCourseSchema
-from app.events import CreateCourseCrudEvent, ModifyCourseCrudEvent, DeleteCourseCrudEvent
+from app.events import CreateCourseCrudEvent, ModifyCourseCrudEvent
 from app.core.exceptions import MultipleCoursesExistException, NoCourseExistsException, CourseAlreadyExistsException
 
 class CourseService:
@@ -31,7 +31,7 @@ class CourseService:
         return CourseWithInstructorsSchema.from_orm(course)
 
     
-    async def create_course(self, name: str, start_at: datetime = None, end_at: datetime = None) -> CourseModel:
+    async def create_course(self, name: str) -> CourseModel:
         from app.services import GiteaService, CleanupService, FileOperation, FileOperationType
 
         try:
@@ -47,8 +47,8 @@ class CourseService:
         course = CourseModel(
             name=name,
             master_remote_url="",
-            start_at=start_at,
-            end_at=end_at
+            start_at=settings.CANVAS_COURSE_START_DATE,
+            end_at=settings.CANVAS_COURSE_END_DATE
         )
 
         self.session.add(course)
@@ -115,12 +115,6 @@ class CourseService:
 
         if "name" in update_fields:
             course.name = update_fields["name"]
-        
-        if "start_at" in update_fields:
-            course.start_at = update_fields["start_at"]
-
-        if "end_at" in update_fields:
-            course.end_at = update_fields["end_at"]
         
         if "master_remote_url" in update_fields:
             course.master_remote_url = update_fields["master_remote_url"]

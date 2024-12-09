@@ -92,7 +92,7 @@ class UserService:
 
         KubernetesService().delete_credential_secret(course.name, onyen)
         try:
-            await GiteaService().delete_user(onyen, purge=True)
+            await GiteaService(self.session).delete_user(onyen, purge=True)
         except Exception as e:
             await cleanup_service.undo_delete_user(create_password_secret=True)
             raise e

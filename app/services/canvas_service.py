@@ -181,29 +181,32 @@ class CanvasService:
         self,
         upload_url: str,
         file: BinaryIO,
-        parent_folder_path_or_id: str | int,
-        on_duplicate: DuplicateFileAction,
-        *,
-        headers={}
+        parent_folder_path_or_id: Path | str | int | None = None,
+        on_duplicate: DuplicateFileAction = DuplicateFileAction.OVERWRITE
     ):
         use_id = isinstance(parent_folder_path_or_id, int)
+        use_path = isinstance(parent_folder_path_or_id, (str, Path))
         
         # Seek to end of file buffer
         file.seek(0, 2)
         payload = {
             "name": file.name,
             "size": file.tell(),
+            "content_type": "",
+            "no_redirect": True,
             "on_duplicate": on_duplicate.value
         }
-        if use_id: payload["parent_folder_id"] = parent_folder_path_or_id
-        else: payload["parent_folder_path"] = parent_folder_path_or_id
         
-        data = await self._post(upload_url, json=payload, headers=headers)
+        if use_id: payload["parent_folder_id"] = parent_folder_path_or_id
+        if use_path: payload["parent_folder_path"] = str(parent_folder_path_or_id)
+        
+        data = await self._post(upload_url, json=payload)
         upload_url = data["upload_url"]
+        file_param = data.get("file_param", file)
 
         file.seek(0)
         res = await self.client.post(upload_url, data=data["upload_params"], files={
-            "file": (file.name, file.read())
+            file_param: (file.name, file.read())
         })
         
         await self._check_response(res)
@@ -271,20 +274,13 @@ class CanvasService:
         assignment_id: int,
         user_id: int,
         file: BinaryIO,
-        parent_folder_path_or_id: str | int,
         on_duplicate: DuplicateFileAction = DuplicateFileAction.OVERWRITE
     ):
         url = f"courses/{ settings.CANVAS_COURSE_ID }/assignments/{ assignment_id }/submissions/{ user_id }/files"
         return await self._upload_file(
             url,
             file,
-            parent_folder_path_or_id,
-            on_duplicate,
-            headers={
-                # I have no idea why this is required (the documentation doesn't mention it),
-                # but file upload endpoints return a 403 if using wrong content-type
-                "Content-Type": "unknown/unknown"
-            }
+            on_duplicate=on_duplicate
         )
     
     async def get_course_folder(
@@ -339,61 +335,70 @@ class CanvasService:
             locked
         )
     
-    async def upload_grade(
+    async def upload_submission(
         self,
         assignment_id: int,
         user_id: int,
-        # not, literally, but \in [0,1]
-        grade_percent: float,
         student_notebook: BinaryIO,
-        comments: str | None = None,
+        comments: str | None = None
     ):
         url = f"courses/{ settings.CANVAS_COURSE_ID }/assignments/{ assignment_id }/submissions"
         iso_now = get_now_with_tzinfo().isoformat()
 
+        assignment = await self.get_assignment(assignment_id)
         student_course_submissions_folder = await self.get_student_course_submissions_folder_path()
-        # You can't attach course files to submissions, this is so that
-        # instructors have an alternative place to view/download submissions
         await self.upload_course_file(
             student_notebook,
-            os.path.join(student_course_submissions_folder, str(assignment_id)),
+            os.path.join(student_course_submissions_folder, assignment["name"]),
             on_duplicate=DuplicateFileAction.OVERWRITE
         )
         student_notebook_file_id = await self.upload_submission_file(
             assignment_id,
             user_id,
             student_notebook,
-            "",
             on_duplicate=DuplicateFileAction.OVERWRITE
         )
-
-        posted_grade = f"{ grade_percent * 100 }%"
         
         payload = {
             "submission": {
                 "user_id": user_id,
                 "submission_type": "online_upload",
-                "posted_grade": posted_grade,
                 "file_ids": [student_notebook_file_id],
                 "submitted_at": iso_now
             },
-            "comment": {},
-            "prefer_points_over_scheme": True
+            "comment": {}
         }
         if comments is not None: payload["comment"]["text_comment"] = comments
 
-        # Although posted_grade is listed as a supported argument of the endpoint,
-        # it only works to set the grade for the first submission by the student.
-        submission = await self._post(url, json=payload)
-        await self._put(f"{ url }/{ user_id }", json={
+        await self._post(url, json=payload)
+
+    """
+    Note that Canvas does not support associating grades with submissions.
+    You can only set the overall assignment grade for the student.
+    Comments will be attached to the active submission.
+    """
+    async def upload_assignment_grade(
+        self,
+        assignment_id: int,
+        user_id: int,
+        # between [0,1]
+        grade_proportion: float,
+        comments: str | None = None,
+    ):
+        url = f"courses/{ settings.CANVAS_COURSE_ID }/assignments/{ assignment_id }/submissions/{ user_id }"
+        
+        posted_grade = f"{ grade_proportion * 100 }%"
+
+        payload = {
             "submission": {
                 "user_id": user_id,
                 "posted_grade": posted_grade
             },
-            "prefer_points_over_scheme": True
-        })
-        return submission
+            "comment": {}
+        }
+        if comments is not None: payload["comment"]["text_comment"] = comments
 
+        await self._put(url, json=payload)
 
     async def update_assignment(self, assignment_id: int, body: UpdateCanvasAssignmentBody):
         url = f"courses/{ settings.CANVAS_COURSE_ID }/assignments/{ assignment_id }"
@@ -454,7 +459,6 @@ class CanvasService:
 
     async def get_private_course_folder_path(self) -> str:
         return self._compute_private_course_folder_path()
-
     
     async def get_student_course_submissions_folder_path(self) -> str:
         return self._compute_student_course_submissions_folder_path(await self.get_private_course_folder_path())

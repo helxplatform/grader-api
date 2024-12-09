@@ -24,8 +24,13 @@ class AssignmentModel(Base):
     due_date = Column(DateTime(timezone=True))
     last_modified_date = Column(DateTime(timezone=True), server_default=func.current_timestamp())
     is_published = Column(Boolean, server_default='f', nullable=False)
+    manual_grading = Column(Boolean, server_default='f', nullable=False)
     
     @hybrid_property
     def student_notebook_path(self) -> str:
         p = Path(self.master_notebook_path)
+        if self.manual_grading:
+            # If the assignment is manually graded, there is no distinct "student" version.
+            # They just share the same notebook.
+            return str(p)
         return str(p.parents[0] / (p.stem + "-student.ipynb"))

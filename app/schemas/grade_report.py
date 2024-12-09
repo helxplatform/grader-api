@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
+from app.models import SubmissionModel
 
 class GradeReportSchema(BaseModel):
     id: int
@@ -30,3 +31,10 @@ class SubmissionGradeSchema(BaseModel):
     total_points: float
     comments: Optional[str]
     submission_already_graded: bool = False
+
+""" By identifying the submission, the associated student and assignment can also be identified. """
+class IdentifiableSubmissionGradeSchema(SubmissionGradeSchema):
+    submission: SubmissionModel
+
+    class Config:
+        arbitrary_types_allowed = True

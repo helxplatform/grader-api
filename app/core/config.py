@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     DEV_PHASE: DevPhase = DevPhase.PROD
     DISABLE_AUTHENTICATION: bool = False
+    # For dev work, this thing is super super annoying. May cause instability.
+    DISABLE_LOGGER: bool = False
     IMPERSONATE_USER: Optional[str] = None
     DOCUMENTATION_URL: Optional[str] = None
 
@@ -48,6 +50,8 @@ class Settings(BaseSettings):
     CANVAS_API_KEY: str
     CANVAS_API_URL: str
     CANVAS_COURSE_ID: str
+    CANVAS_COURSE_START_DATE: str
+    CANVAS_COURSE_END_DATE: str
 
     # Authentication
     JWT_SECRET_KEY: str

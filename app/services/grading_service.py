@@ -2,7 +2,8 @@ import tempfile
 import zipfile
 import glob
 import json
-from typing import BinaryIO
+from typing import BinaryIO, Optional
+from collections import Counter
 from otter.assign import main as otter_assign
 from otter.run import main as otter_run
 from otter.export import export_notebook
@@ -13,11 +14,14 @@ from io import BytesIO
 from pathlib import Path
 from sqlalchemy.orm import Session
 from app.core.config import settings, DevPhase
-from app.core.exceptions import SubmissionNotFoundException, OtterConfigViolationException
+from app.core.exceptions import (
+    SubmissionNotFoundException, OtterConfigViolationException, AutogradingDisabledException,
+    StudentGradedMultipleTimesException, SubmissionMismatchException
+)
 from app.core.utils.datetime import get_now_with_tzinfo
-from app.services import StudentService, SubmissionService, CourseService, GiteaService, LmsSyncService, CleanupService
+from app.services import StudentService, SubmissionService, CourseService, GiteaService
 from app.models import AssignmentModel, SubmissionModel, GradeReportModel
-from app.schemas import GradeReportSchema, SubmissionGradeSchema
+from app.schemas import GradeReportSchema, SubmissionGradeSchema, IdentifiableSubmissionGradeSchema
 
 class GradingService:
     def __init__(self, session: Session):
@@ -55,7 +59,7 @@ class GradingService:
                 export_notebook(student_notebook_path, student_notebook_pdf_path)
                 with open(student_notebook_pdf_path, "rb") as f:
                     student_notebook = BytesIO(f.read())
-                    student_notebook.name = f.name
+                    student_notebook.name = student_notebook_pdf_path.name
         except Exception as e:
             print("Couldn't generate PDF of student submission: ", e)
             student_notebook = BytesIO(student_notebook_content)
@@ -106,6 +110,31 @@ class GradingService:
 
 
         return final_graded_notebook_content, config_zip.getvalue()
+    
+    """ Returns path to the loaded submission notebook """
+    async def load_submission_archive(
+        self,
+        submission: SubmissionModel,
+        parent_dir: Path | str
+    ) -> tuple[Path, BinaryIO]:
+        parent_dir = Path(parent_dir)
+
+        submission_archive_path = parent_dir / str(submission.id)
+        submission_notebook_path = submission_archive_path / submission.assignment.student_notebook_path
+        student_repo_name = await CourseService(self.session).get_student_repository_name(submission.student.onyen)
+        archive_stream = await GiteaService(self.session).download_repository(
+            name=student_repo_name,
+            owner=submission.student.onyen,
+            treeish_id=submission.commit_id,
+            path=submission.assignment.directory_path
+        )
+        with zipfile.ZipFile(archive_stream, "r") as zip:
+            zip.extractall(submission_archive_path)
+
+        with open(submission_notebook_path, "rb") as f:
+            submission_notebook_content = f.read()
+
+        return (submission_notebook_path, submission_notebook_content)
 
     async def grade_assignment(
         self,
@@ -116,10 +145,10 @@ class GradingService:
         *,
         dry_run=False
     ) -> GradeReportModel:
-        course_service = CourseService(self.session)
-        gitea_service = GiteaService(self.session)
-        submission_service = SubmissionService(self.session)
-        lms_sync_service = LmsSyncService(self.session)
+        from app.services import LmsSyncService, CleanupService
+
+        if assignment.manual_grading:
+            raise AutogradingDisabledException()
 
         submissions = await self.compute_submissions_at_moment(assignment)
         final_graded_notebook_content, zip_config_bytes = await self.generate_config(
@@ -138,18 +167,8 @@ class GradingService:
             with open(otter_config_path, "wb+") as f:
                 f.write(zip_config_bytes)
             for submission in submissions:
-                submission_archive_path = temp_dir / str(submission.id)
+                (submission_notebook_path, student_notebook_content) = await self.load_submission_archive(submission, temp_dir)
                 submission_graded_path = temp_dir / f"{ submission.id }-graded.json"
-                submission_notebook_path = submission_archive_path / submission.assignment.student_notebook_path
-                student_repo_name = await course_service.get_student_repository_name(submission.student.onyen)
-                archive_stream = await gitea_service.download_repository(
-                    name=student_repo_name,
-                    owner=submission.student.onyen,
-                    treeish_id=submission.commit_id,
-                    path=submission.assignment.directory_path
-                )
-                with zipfile.ZipFile(archive_stream, "r") as zip:
-                    zip.extractall(submission_archive_path)
 
                 try:
                     otter_run(
@@ -173,8 +192,7 @@ class GradingService:
 
                 score = sum([question["score"] for question in tests])
                 max_score = sum([question["max_score"] for question in tests])
-                with open(submission_notebook_path, "rb") as f:
-                    student_notebook_content = f.read()
+
                 final_scores[submission] = (
                     SubmissionGradeSchema(
                         score=score,
@@ -210,11 +228,9 @@ class GradingService:
                         # This submission is already graded. No point in reuploading it to Canvas.
                         continue
                     
-                    student_notebook_upload = await self.get_student_notebook_upload(submission, student_notebook_content)
-                    await lms_sync_service.upsync_grade(
+                    await LmsSyncService(self.session).upsync_grade(
                         submission=submission,
-                        grade_percent=submission_grade.score / grade_report.total_points,
-                        student_notebook=student_notebook_upload,
+                        grade_proportion=submission_grade.score / grade_report.total_points,
                         comments=submission_grade.comments if assignment.grader_question_feedback else None,
                     )
                     submission.graded = True
@@ -226,3 +242,79 @@ class GradingService:
             self.session.commit()
             
             return grade_report
+        
+    async def grade_assignment_manually(
+        self,
+        assignment: AssignmentModel,
+        grade_data: list[IdentifiableSubmissionGradeSchema],
+        *,
+        dry_run=False
+    ) -> GradeReportModel:
+        from app.services import LmsSyncService, CleanupService
+        
+        lms_sync_service = LmsSyncService(self.session)
+
+        # Validate that manually-entered grading data does not attempt
+        # to grade multiple submissions from a single student.
+        grade_users = [g.submission.student.onyen for g in grade_data]
+        counts = Counter(grade_users)
+        for onyen, count in counts.items():
+            if count > 1: raise StudentGradedMultipleTimesException()
+
+        # Validate that manually-entered grading data does not attempt
+        # to grade submissions for anything besides the given assignment.
+        for grade in grade_data:
+            if grade.submission.assignment != assignment:
+                raise SubmissionMismatchException()
+
+        # Load student notebooks alongside submission grades
+        grades_with_notebooks = []
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir = Path(temp_dir)
+            for grade in grade_data:
+                (_, student_notebook_content) = await self.load_submission_archive(grade.submission, temp_dir)
+                grades_with_notebooks.append((grade, student_notebook_content))
+
+        # Generate a grade report from submission grades
+        grade_report = GradeReportModel.from_submission_grades(
+            assignment=assignment,
+            submission_grades=grade_data,
+            master_notebook_content="",
+            otter_config_content=""
+        )
+
+        print(f"Generated manual grade report:\ntotal points = { grade_report.total_points }\navg = { grade_report.average }")
+
+        if dry_run: return grade_report
+
+        self.session.add(grade_report)
+        self.session.commit()
+
+        cleanup_service = CleanupService.Grading(self.session, grade_report)
+
+        try:
+            for (submission_grade, student_notebook_content) in grades_with_notebooks:
+                submission = submission_grade.submission
+                # We actually don't skip upsyncing here when `submission.graded == True`
+                # This is because the professor may want to manually update the grade of
+                # a submission.
+
+                student_notebook_upload = await self.get_student_notebook_upload(
+                    submission,
+                    student_notebook_content
+                )
+                await lms_sync_service.upsync_grade(
+                    submission=submission,
+                    grade_percent=submission_grade.score / grade_report.total_points,
+                    student_notebook=student_notebook_upload,
+                    comments=submission_grade.comments if assignment.grader_question_feedback else None,
+                )
+                submission.graded = True
+        except Exception as e:
+            cleanup_service.undo_grade_assignment(delete_database_grade_report=True)
+            raise e
+        
+        # All we've done is change `graded` on submissions, which can't cause any violations here.
+        self.session.commit()
+
+        return grade_report

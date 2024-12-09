@@ -1,14 +1,17 @@
 from pydantic import BaseModel, PositiveInt
 from datetime import datetime
-from typing import List, Union
+from typing import List, Union, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.models import AssignmentModel, StudentModel, InstructorModel
-from app.schemas import InstructorAssignmentSchema, StudentAssignmentSchema, AssignmentSchema, UpdateAssignmentSchema, GradeReportSchema
+from app.schemas import (
+    InstructorAssignmentSchema, StudentAssignmentSchema, AssignmentSchema,
+    UpdateAssignmentSchema, GradeReportSchema, IdentifiableSubmissionGradeSchema
+)
 from app.schemas._unset import UNSET
 from app.services import (
     AssignmentService, InstructorAssignmentService, StudentAssignmentService,
-    UserService, LmsSyncService, GradingService
+    UserService, LmsSyncService, GradingService, SubmissionService
 )
 from app.core.dependencies import get_db, PermissionDependency, RequireLoginPermission, AssignmentModifyPermission, UserIsInstructorPermission
 from app.services.course_service import CourseService
@@ -26,10 +29,20 @@ class UpdateAssignmentBody(BaseModel):
     available_date: datetime | None
     due_date: datetime | None
     is_published: bool = UNSET
+    manual_grading: bool = UNSET
 
-class GradingBody(BaseModel):
+class OtterGradingBody(BaseModel):
     master_notebook_content: str
     otter_config_content: str
+
+class ManualGrade(BaseModel):
+    submission_id: int
+    # Between [0,1]
+    grade_proportion: float
+    comments: Optional[str]
+
+class ManualGradingBody(BaseModel):
+    grade_data: list[ManualGrade]
 
 @router.patch("/assignments/{assignment_name}", response_model=AssignmentSchema)
 async def update_assignment_fields(
@@ -89,13 +102,41 @@ async def grade_assignment(
     request: Request,
     db: Session = Depends(get_db),
     assignment_name: str,
-    grading_body: GradingBody,
+    grading_body: OtterGradingBody,
     perm: None = Depends(PermissionDependency(UserIsInstructorPermission))
 ):
     assignment = await AssignmentService(db).get_assignment_by_name(assignment_name)
-    grade_report = await GradingService(db).grade_assignment(
+    return await GradingService(db).grade_assignment(
         assignment,
         grading_body.master_notebook_content,
         grading_body.otter_config_content
     )
-    return grade_report
+
+@router.post(
+    "/assignments/{assignment_name}/grade_manual",
+    response_model=GradeReportSchema
+)
+async def grade_assignment_manual(
+    *,
+    request: Request,
+    db: Session = Depends(get_db),
+    assignment_name: str,
+    grading_body: ManualGradingBody,
+    perm: None = Depends(PermissionDependency(UserIsInstructorPermission))
+):
+    assignment = await AssignmentService(db).get_assignment_by_name(assignment_name)
+    
+    grade_submissions = []
+    for manual_grade in grading_body.grade_data:
+        submission = await SubmissionService(db).get_submission_by_id(manual_grade.submission_id)
+        grade_submissions.append(IdentifiableSubmissionGradeSchema(
+            score=manual_grade.grade_proportion * 100,
+            total_points=100,
+            comments=manual_grade.comments,
+            submission_already_graded=submission.graded,
+            submission_id=submission.id
+        ))
+    return await GradingService(db).grade_assignment_manually(
+        assignment,
+        grade_submissions
+    )

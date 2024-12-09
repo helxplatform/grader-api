@@ -16,8 +16,6 @@ class CourseSchema(BaseModel):
 
 class UpdateCourseSchema(BaseModel):
     name: str = UNSET
-    start_at: datetime | None
-    end_at: datetime | None
     master_remote_url: str = UNSET
 
 class CourseWithInstructorsSchema(CourseSchema):

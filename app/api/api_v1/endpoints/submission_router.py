@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, Query, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from app.schemas import SubmissionSchema
-from app.services import SubmissionService, StudentService, AssignmentService, GiteaService, CourseService
+from app.services import SubmissionService, StudentService, AssignmentService, GiteaService, CourseService, LmsSyncService
 from app.models import SubmissionModel
 from app.core.dependencies import get_db, PermissionDependency, UserIsStudentPermission, SubmissionCreatePermission, SubmissionListPermission, SubmissionDownloadPermission
 
@@ -13,6 +13,7 @@ router = APIRouter()
 class SubmissionBody(BaseModel):
     assignment_id: int
     commit_id: str
+    student_notebook_content: str
 
 @router.post("/submissions", response_model=SubmissionSchema)
 async def create_submission(
@@ -20,17 +21,22 @@ async def create_submission(
     request: Request,
     db: Session = Depends(get_db),
     perm: None = Depends(PermissionDependency(UserIsStudentPermission, SubmissionCreatePermission)),
-    submission: SubmissionBody
+    submission_body: SubmissionBody
 ):
     onyen = request.user.onyen
 
     submission_service = SubmissionService(db)
     student = await StudentService(db).get_user_by_onyen(onyen)
-    assignment = await AssignmentService(db).get_assignment_by_id(submission.assignment_id)
+    assignment = await AssignmentService(db).get_assignment_by_id(submission_body.assignment_id)
     submission = await submission_service.create_submission(
         student,
         assignment,
-        commit_id=submission.commit_id
+        commit_id=submission_body.commit_id
+    )
+
+    await LmsSyncService(db).upsync_submission(
+        submission,
+        submission_body.student_notebook_content.encode()
     )
 
     return await submission_service.get_submission_schema(submission)
