@@ -234,6 +234,11 @@ class LmsSyncService:
         self,
         assignment: AssignmentModel
     ):
+        """ TODO: lock_date should be updating according to extra credit (and
+        perhaps at some point a late work point-deduction system). It was previously
+        being entirely ignored which isn't good since it will cause a validation error
+        if its value is before due_at.
+        """
         await self.canvas_service.update_assignment(assignment.id, UpdateCanvasAssignmentBody(
             name=assignment.name,
             available_date=assignment.available_date,

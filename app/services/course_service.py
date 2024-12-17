@@ -121,17 +121,19 @@ class CourseService:
         if "master_remote_url" in update_fields:
             course.master_remote_url = update_fields["master_remote_url"]
 
-        self.session.commit()
-
-        try:
-            await event_emitter.emit_async(
-                CourseCrudEvent(
-                    resource=course,
-                    crud_type=CrudType.MODIFY, 
-                    modified_fields=list(update_fields.keys())
+        # There's no reason to commit and emit a superfluous CRUD event
+        # if no changes were actually done to the course's existing values
+        if self.session.is_modified(course):
+            self.session.commit()
+            try:
+                await event_emitter.emit_async(
+                    CourseCrudEvent(
+                        resource=course,
+                        crud_type=CrudType.MODIFY, 
+                        modified_fields=list(update_fields.keys())
+                    )
                 )
-            )
-        except: pass
+            except: pass
 
         return course
 

@@ -219,17 +219,19 @@ class AssignmentService:
         if assignment.available_date is not None and assignment.due_date is not None and assignment.available_date >= assignment.due_date:
             raise AssignmentDueBeforeOpenException()
 
-        self.session.commit()
-
-        try:
-            await event_emitter.emit_async(
-                AssignmentCrudEvent(
-                    resource=assignment,
-                    crud_type=CrudType.MODIFY,
-                    modified_fields=list(update_fields.keys())
+        # There's no reason to commit and emit a superfluous CRUD event
+        # if no changes were actually done to the assignment's existing values
+        if self.session.is_modified(assignment):
+            self.session.commit()
+            try:
+                await event_emitter.emit_async(
+                    AssignmentCrudEvent(
+                        resource=assignment,
+                        crud_type=CrudType.MODIFY,
+                        modified_fields=list(update_fields.keys())
+                    )
                 )
-            )
-        except: pass
+            except: pass
 
         return assignment
     
