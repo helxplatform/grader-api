@@ -55,6 +55,7 @@ def init_routers(app: FastAPI):
 def init_listeners(app: FastAPI):
     @app.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
+        uvicorn_logger.error(exc.stack)
         content = { "error_code": exc.error_code, "message": exc.message }
         if settings.DEV_PHASE == DevPhase.DEV:
             content["stack"] = exc.stack

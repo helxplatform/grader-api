@@ -59,7 +59,7 @@ class LogMiddleware(BaseHTTPMiddleware):
                 request_log["error_code"] = resp_body["error_code"]
                 request_log["message"] = resp_body["message"]
                 self._logger.error(request_log)
-                self._logger.error(resp_body["stack"])
+                # self._logger.error(resp_body["stack"])
             elif type(resp_body) is str:
                 # If the resp_body is of type str because the above json.loads() failed, 
                 # don't add the fields above, just use the whole resp_body
