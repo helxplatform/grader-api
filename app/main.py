@@ -1,5 +1,6 @@
-from logging.handlers import RotatingFileHandler
 import sys
+import logging
+from logging.handlers import RotatingFileHandler
 from typing import List
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -14,7 +15,6 @@ from app.core.config import settings, DevPhase
 from app.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddleware
 from app.core.exceptions import CustomException
 
-import logging
 
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
@@ -53,8 +53,19 @@ def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
 def init_listeners(app: FastAPI):
+    # Errors go to the most specialized handler, so this will only pick up
+    # non CustomException and non FastAPI/starlette errors (internal server errors)
+    @app.exception_handler(Exception)
+    async def base_exception_handler(request: Request, exc: Exception):
+        content = { "error_code": 500, "message": "Internal server error" }
+        return JSONResponse(
+            status_code=500,
+            content=content
+        )
     @app.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
+        # Only log regular CustomException errors under debug
+        uvicorn_logger.debug(exc.stack)
         content = { "error_code": exc.error_code, "message": exc.message }
         if settings.DEV_PHASE == DevPhase.DEV:
             content["stack"] = exc.stack

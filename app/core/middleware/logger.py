@@ -59,7 +59,6 @@ class LogMiddleware(BaseHTTPMiddleware):
                 request_log["error_code"] = resp_body["error_code"]
                 request_log["message"] = resp_body["message"]
                 self._logger.error(request_log)
-                self._logger.error(resp_body["stack"])
             elif type(resp_body) is str:
                 # If the resp_body is of type str because the above json.loads() failed, 
                 # don't add the fields above, just use the whole resp_body
@@ -131,12 +130,15 @@ class LogMiddleware(BaseHTTPMiddleware):
                 response.headers["X-API-Request-ID"] = request_id
             return response
         except Exception as e:
+            # If we hit an exception here, it is a non-HTTP error, i.e., it is an internal server error.
             exception_log = {
                 "path": request.url.path,
                 "method": request.method,
                 "reason": e
             }
-            self._logger.exception(exception_log)
+            self._logger.error(exception_log)
+            # Starlette will log the internal traceback for us automatically.
+            raise e
     
     def _get_endpoints_to_not_log_req_body(self) -> list[str]:
         return [
