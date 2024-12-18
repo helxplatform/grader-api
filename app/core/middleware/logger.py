@@ -43,11 +43,12 @@ class LogMiddleware(BaseHTTPMiddleware):
         response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
 
         try:
+            # Why is this resp_body[0]?
             resp_body = json.loads(resp_body[0])
         except:
             resp_body = str(resp_body)
 
-        if "error_code" in resp_body:
+        if isinstance(resp_body, dict) and "error_code" in resp_body:
             # If the response contains an error code, that means an exception happened
             # and we need to log it. So just log the exception and return, don't log
             # the request as you would normally.
