@@ -1,9 +1,6 @@
-import os.path
-import tempfile
 from typing import List
-from pathlib import Path
 from datetime import datetime
-from sqlalchemy import desc, func
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from app.events import dispatch
 from app.models import StudentModel, AssignmentModel, SubmissionModel

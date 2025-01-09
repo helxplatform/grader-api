@@ -4,7 +4,6 @@ from sqlalchemy import (
     Integer, Text, DateTime,
     func
 )
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from app.database import Base
 

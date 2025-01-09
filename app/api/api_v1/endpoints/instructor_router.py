@@ -1,6 +1,6 @@
 from typing import List
 from pydantic import BaseModel
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.schemas import InstructorSchema
 from app.services import InstructorService

@@ -1,5 +1,4 @@
-from sqlalchemy import Column, String, Text, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, ForeignKey
 from app.database import Base
 
 class OnyenPIDModel(Base):

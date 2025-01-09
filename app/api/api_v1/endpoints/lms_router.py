@@ -1,8 +1,8 @@
 from typing import List
 from pydantic import BaseModel
-from fastapi import APIRouter, Request, Depends, UploadFile, File
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.services import LmsSyncService, AssignmentService
+from app.services import LmsSyncService
 from app.core.dependencies import (
     get_db, PermissionDependency,
     UserIsInstructorPermission

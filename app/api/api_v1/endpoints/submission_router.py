@@ -50,7 +50,6 @@ async def get_submissions(
     assignment_id: int,
     student_onyen: Optional[str] = Query(default=None, description="Student's onyen. Lists all students if omitted.")
 ):
-    onyen = request.user.onyen
     submission_service = SubmissionService(db)
     assignment = await AssignmentService(db).get_assignment_by_id(assignment_id)
     if student_onyen is None:

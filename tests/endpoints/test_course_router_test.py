@@ -2,12 +2,7 @@ import unittest
 from fastapi import Request
 from fastapi.testclient import TestClient
 from unittest.mock import MagicMock, patch
-
-from app.main import app
 from app.api.api_v1.endpoints.course_router import router
-from app.schemas.user import InstructorSchema
-from app.schemas import CourseWithInstructorsSchema
-from app.core.dependencies import PermissionDependency, CourseListPermission, InstructorListPermission
 from sqlalchemy.orm import Session
 
 class TestCourseEndpoints(unittest.IsolatedAsyncioTestCase):

@@ -1,4 +1,3 @@
-import json
 from typing import List
 from pydantic import PositiveInt
 from datetime import datetime, timedelta
@@ -62,24 +61,24 @@ class AssignmentService:
         owner = await course_service.get_instructor_gitea_organization_name()
         branch_name = await course_service.get_master_branch_name()
 
-        master_notebook_path = f"{ assignment.directory_path }/{ assignment.master_notebook_path }"
+        # master_notebook_path = f"{ assignment.directory_path }/{ assignment.master_notebook_path }"
         # Default empty notebook for JupyterLab 4 w/ Otter Config
-        otter_config_cell = {
-            "cell_type": "raw",
-            "metadata": {},
-            "source": [
-                "# ASSIGNMENT CONFIG\n",
-                "requirements: requirements.txt\n"
-                "export_cell: false\n"
-            ]
-        }
-        title_cell = {
-            "cell_type": "markdown",
-            "metadata": {},
-            "source": [
-                f"# { assignment.name }\n",
-            ]
-        }
+        # otter_config_cell = {
+        #     "cell_type": "raw",
+        #     "metadata": {},
+        #     "source": [
+        #         "# ASSIGNMENT CONFIG\n",
+        #         "requirements: requirements.txt\n"
+        #         "export_cell: false\n"
+        #     ]
+        # }
+        # title_cell = {
+        #     "cell_type": "markdown",
+        #     "metadata": {},
+        #     "source": [
+        #         f"# { assignment.name }\n",
+        #     ]
+        # }
         
         # See comment above commented out FileOperation below
         # master_notebook_content = json.dumps({ "cells": [otter_config_cell, title_cell], "metadata": {  "kernelspec": {   "display_name": "Python 3 (ipykernel)",   "language": "python",   "name": "python3"  },  "language_info": {   "codemirror_mode": {    "name": "ipython",    "version": 3   },   "file_extension": ".py",   "mimetype": "text/x-python",   "name": "python",   "nbconvert_exporter": "python",   "pygments_lexer": "ipython3",   "version": "3.11.5"  } }, "nbformat": 4, "nbformat_minor": 5})
@@ -120,8 +119,10 @@ class AssignmentService:
         return assignment
     
     async def delete_assignment(self, assignment: AssignmentModel) -> None:
+        """
+        NOTE: Commenting out gitea & course service references until we can figure out making this work alongside the merge control policy
         from app.services import GiteaService, CourseService, FileOperation, FileOperationType
-
+        
         gitea_service = GiteaService(self.session)
         course_service = CourseService(self.session)
 
@@ -134,15 +135,16 @@ class AssignmentService:
             FileOperation(content="", path=f"{ directory_path }", operation=FileOperationType.DELETE)
         ]
 
-        """ (maybe) this can come back in the future.
-        But it violates the merge control policy if active, which is problematic at the moment."""
-        # await gitea_service.modify_repository_files(
-        #     name=master_repository_name,
-        #     owner=owner,
-        #     branch_name=branch_name,
-        #     commit_message=f"Delete assignment",
-        #     files=files_to_modify
-        # )
+        # (maybe) this can come back in the future.
+        # But it violates the merge control policy if active, which is problematic at the moment.
+        await gitea_service.modify_repository_files(
+            name=master_repository_name,
+            owner=owner,
+            branch_name=branch_name,
+            commit_message=f"Delete assignment",
+            files=files_to_modify
+        )
+        """
 
         self.session.delete(assignment)
         self.session.commit()

@@ -1,7 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
-from .user import StudentSchema
-from .assignment import AssignmentSchema
+
 
 class DatabaseSubmissionSchema(BaseModel):
     id: int
