@@ -40,12 +40,16 @@ class LogMiddleware(BaseHTTPMiddleware):
             request_id = request.headers["X-API-REQUEST-ID"]
         else:
             request_id = str(uuid4())
-            
-        response, response_dict = await self._create_response_log(
-            call_next,
-            request,
-            request_id
-        )
+
+        start_time = time.perf_counter()
+        response = await self._execute_request(call_next, request, request_id)
+        finish_time = time.perf_counter()
+
+        execution_time = finish_time - start_time
+        response_dict = {
+            "status_code": response.status_code,
+            "execution_time": f"{execution_time:0.4f}s",
+        }
 
         resp_body = [section async for section in response.__dict__["body_iterator"]]
         response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
@@ -106,26 +110,6 @@ class LogMiddleware(BaseHTTPMiddleware):
             request_log_dict["body"] = None
 
         return request_log_dict
-    
-    async def _create_response_log(
-        self,
-        call_next: Callable,
-        request: Request,
-        request_id
-    ) -> Response:
-
-        start_time = time.perf_counter()
-        response = await self._execute_request(call_next, request, request_id)
-        finish_time = time.perf_counter()
-
-        execution_time = finish_time - start_time
-
-        response_log_dict = {
-            "status_code": response.status_code,
-            "execution_time": f"{execution_time:0.4f}s",
-        }
-
-        return response, response_log_dict
 
     async def _execute_request(
         self,
