@@ -112,7 +112,7 @@ class LmsSyncService:
                 except LMSUserNotFoundException: pass
        
         for student in canvas_students:
-            pid, email, name = student.get("sis_user_id"), student.get("email"), student.get("name")
+            id, pid, email, name = student.get("id"), student.get("sis_user_id"), student.get("email"), student.get("name")
             if pid is None or email is None or name is None:
                 print("Skipping over pending student", name or "<unknown>")
                 continue
@@ -132,6 +132,7 @@ class LmsSyncService:
                 #create a new student
                 print("student doesn't exist", user_info.onyen)
                 await self.student_service.create_student(
+                    id=id,
                     onyen=user_info.onyen,
                     name=name,
                     email=email
@@ -164,7 +165,7 @@ class LmsSyncService:
                 except LMSUserNotFoundException: pass
         
         for instructor in canvas_instructors:
-            pid, email, name = instructor.get("sis_user_id"), instructor.get("email"), instructor.get("name")
+            id, pid, email, name = instructor.get("id"), instructor.get("sis_user_id"), instructor.get("email"), instructor.get("name")
             if pid is None or email is None or name is None:
                 print("Skipping over pending instructor", name or "<unknown>")
                 continue
@@ -180,6 +181,7 @@ class LmsSyncService:
                 #create a new instructor
                 print("instructor doesn't exit", user_info.onyen)
                 await self.instructor_service.create_instructor(
+                    id=id,
                     onyen=user_info.onyen,
                     name=name,
                     email=email

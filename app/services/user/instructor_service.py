@@ -12,6 +12,7 @@ class InstructorService(UserService):
 
     async def create_instructor(
         self,
+        id: int,
         onyen: str,
         name: str,
         email: str
@@ -67,6 +68,12 @@ class InstructorService(UserService):
 
     async def get_user_by_onyen(self, onyen: str) -> InstructorModel:
         user = await super().get_user_by_onyen(onyen)
+        if not isinstance(user, InstructorModel):
+            raise NotAnInstructorException()
+        return user
+    
+    async def get_user_by_id(self, id: int) -> InstructorModel:
+        user = await super().get_user_by_id(id)
         if not isinstance(user, InstructorModel):
             raise NotAnInstructorException()
         return user

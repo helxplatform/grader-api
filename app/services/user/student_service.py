@@ -1,6 +1,6 @@
 from typing import List
 from app.events import dispatch
-from app.models import StudentModel
+from app.models import StudentModel, UserModel
 from app.events import CreateUserCrudEvent
 from app.core.role_permissions import student_role
 from app.core.exceptions import NotAStudentException, UserAlreadyExistsException, UserNotFoundException
@@ -14,6 +14,7 @@ class StudentService(UserService):
 
     async def create_student(
         self,
+        id: int,
         onyen: str,
         name: str,
         email: str
@@ -33,6 +34,7 @@ class StudentService(UserService):
             pass
 
         student = StudentModel(
+            id=id,
             onyen=onyen,
             name=name,
             email=email,
@@ -93,6 +95,11 @@ class StudentService(UserService):
         if not isinstance(user, StudentModel):
             raise NotAStudentException()
         return user
+    
+    async def get_user_by_id(self, id: int) -> StudentModel:
+        user = await super().get_user_by_id(id)
+        if not isinstance(user, StudentModel):
+            raise NotAStudentException()
     
     async def set_fork_cloned(self, student: StudentModel) -> None:
         student.fork_cloned = True
