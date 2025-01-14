@@ -36,7 +36,7 @@ class LogMiddleware(BaseHTTPMiddleware):
         await self.set_body(request)
 
         request_id = ""
-        if request.headers is not None and "X-API-REQUEST-ID" in request.headers.keys:
+        if request.headers is not None and "X-API-REQUEST-ID" in request.headers.keys():
             request_id = request.headers["X-API-REQUEST-ID"]
         else:
             request_id = str(uuid4())
