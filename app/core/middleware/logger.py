@@ -3,11 +3,14 @@ import logging
 import time
 from typing import Callable
 from uuid import uuid4
+
 from fastapi import FastAPI, Response
-from starlette.types import Message
-from starlette.requests import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.types import Message
+
 from app.core.utils.async_iterator_wrapper import AsyncIteratorWrapper
+
 
 class LogMiddleware(BaseHTTPMiddleware):
 
@@ -32,7 +35,12 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         await self.set_body(request)
 
-        request_id = str(uuid4())
+        request_id = ""
+        if request.headers is not None and "X-API-REQUEST-ID" in request.headers.keys:
+            request_id = request.headers["X-API-REQUEST-ID"]
+        else:
+            request_id = str(uuid4())
+            
         response, response_dict = await self._create_response_log(
             call_next,
             request,
@@ -52,8 +60,9 @@ class LogMiddleware(BaseHTTPMiddleware):
             # and we need to log it. So just log the exception and return, don't log
             # the request as you would normally.
             request_log = {
-                "path": request.url.path,
                 "method": request.method,
+                "endpoint": request.url.path,
+                "user": request.user.onyen if hasattr(request.user, "onyen") else None,
             }
             if type(resp_body) is dict:
                 request_log["error_code"] = resp_body["error_code"]
