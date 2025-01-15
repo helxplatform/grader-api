@@ -136,6 +136,5 @@ class LogMiddleware(BaseHTTPMiddleware):
     def _get_endpoints_to_not_log_req_body(self) -> list[str]:
         return [
             "/api/v1/login",
-            "/api/v1/login/gitea/ssh",
             "/api/v1/refresh"
         ]
