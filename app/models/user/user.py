@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Sequence, Integer, Text, Enum, ForeignKey
+from sqlalchemy import Column, Sequence, Integer, Text, Enum
 from sqlalchemy.orm import relationship
 from app.database import Base
 from app.core.role_permissions import UserRoleType

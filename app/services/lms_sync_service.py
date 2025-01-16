@@ -1,9 +1,6 @@
-import asyncio
-import os.path
-from typing import BinaryIO
 from sqlalchemy.orm import Session
 from app.core.config import settings
-from app.services.canvas_service import CanvasService, UpdateCanvasAssignmentBody, DuplicateFileAction
+from app.services.canvas_service import CanvasService, UpdateCanvasAssignmentBody
 from app.services.course_service import CourseService
 from app.services.ldap_service import LDAPService
 from app.services.assignment_service import AssignmentService

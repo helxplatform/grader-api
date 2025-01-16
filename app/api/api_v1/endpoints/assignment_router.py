@@ -1,9 +1,9 @@
 from pydantic import BaseModel, PositiveInt
 from datetime import datetime
 from typing import List, Union, Optional
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
-from app.models import AssignmentModel, StudentModel, InstructorModel
+from app.models import StudentModel, InstructorModel
 from app.schemas import (
     InstructorAssignmentSchema, StudentAssignmentSchema, AssignmentSchema,
     UpdateAssignmentSchema, GradeReportSchema, IdentifiableSubmissionGradeSchema

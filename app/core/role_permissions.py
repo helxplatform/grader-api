@@ -1,9 +1,6 @@
 from typing import List
 from enum import Enum
-from sqlalchemy import Column, Sequence, Integer, Text
-from sqlalchemy.orm import relationship
 from sqlalchemy.types import TypeDecorator, String
-from app.database import Base
 
 class UserPermission(str, Enum):
     ASSIGNMENT__GET    = "assignment:get"

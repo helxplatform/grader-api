@@ -1,4 +1,4 @@
-from typing import List, Annotated
+from typing import Annotated
 from pydantic import BaseModel
 from fastapi import APIRouter, Request, Depends, Header
 from sqlalchemy.orm import Session
@@ -6,7 +6,6 @@ from app.schemas import RefreshTokenSchema, UserRoleSchema, UserPermissionSchema
 from app.services import UserService, JwtService, AppstoreService, GiteaService
 from app.models.user import UserType
 from app.core.dependencies import get_db, PermissionDependency, RequireLoginPermission
-from app.core.exceptions import UserNotFoundException, AppstoreUserDoesNotMatchException
 
 router = APIRouter()
 
