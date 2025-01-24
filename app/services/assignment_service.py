@@ -8,7 +8,13 @@ from app.core.exceptions.assignment import AssignmentCannotBeUnpublished
 from app.events import dispatch
 from app.models import AssignmentModel, InstructorModel, StudentModel, ExtraTimeModel
 from app.models.course import CourseModel
-from app.schemas import AssignmentSchema, InstructorAssignmentSchema, StudentAssignmentSchema, UpdateAssignmentSchema
+from app.schemas import (
+    AssignmentSchema,
+    InstructorAssignmentSchema,
+    StudentAssignmentSchema,
+    UpdateAssignmentSchema,
+    AssignmentOverrideSchema
+)
 from app.events import CreateAssignmentCrudEvent, ModifyAssignmentCrudEvent, DeleteAssignmentCrudEvent
 from app.core.exceptions import (
     AssignmentNotFoundException,
@@ -33,7 +39,8 @@ class AssignmentService:
         max_attempts: PositiveInt | None,
         available_date: datetime | None,
         due_date: datetime | None,
-        is_published: bool
+        is_published: bool,
+        assignment_override: AssignmentOverrideSchema | None
     ) -> AssignmentModel:
         from app.services import GiteaService, FileOperation, FileOperationType, CourseService
 
@@ -52,7 +59,8 @@ class AssignmentService:
             max_attempts=max_attempts,
             available_date=available_date,
             due_date=due_date,
-            is_published=is_published
+            is_published=is_published,
+            assignment_override=assignment_override
         )
 
         self.session.add(assignment)
@@ -167,6 +175,17 @@ class AssignmentService:
             .first()
         if assignment is None:
             raise AssignmentNotFoundException()
+        return assignment
+    
+    async def get_assignment_for_student_by_id(self, student_id: int, assignment_id: int) -> AssignmentModel:
+        assignment = self.session.query(AssignmentModel) \
+            .filter_by(id=assignment_id) \
+            .first()
+        if assignment is None:
+            raise AssignmentNotFoundException()
+        
+        if assignment
+
         return assignment
     
     async def update_assignment(

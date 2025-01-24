@@ -13,6 +13,7 @@ from app.services.user.instructor_service import InstructorService
 from app.models import AssignmentModel, SubmissionModel
 from app.schemas.course import UpdateCourseSchema
 from app.schemas.assignment import UpdateAssignmentSchema
+from app.schemas.assignment_override import AssignmentOverrideSchema
 from app.core.exceptions import (
     AssignmentNotFoundException, NoCourseExistsException, 
     UserNotFoundException, LMSUserNotFoundException
@@ -72,18 +73,24 @@ class LmsSyncService:
                     available_date=assignment["unlock_at"],
                     due_date=assignment["due_at"],
                     is_published=assignment["published"],
+                    assignment_overrides=assignment["overrides"],
                     max_attempts=max_attempts
                 ))
 
             except AssignmentNotFoundException as e:
+                # create assignment override, add service 
+                # if assignment["has_overrides"]:
+                #     await self.assignment_override_service.create_assignment_override()
+
                 #create a new assignment
                 await self.assignment_service.create_assignment(
-                    id=assignment['id'],
-                    name=assignment['name'], 
-                    due_date=assignment['due_at'], 
-                    available_date=assignment['unlock_at'],
-                    directory_path=assignment['name'],
-                    is_published=assignment['published'],
+                    id=assignment["id"],
+                    name=assignment["name"], 
+                    due_date=assignment["due_at"], 
+                    available_date=assignment["unlock_at"],
+                    directory_path=assignment["name"],
+                    is_published=assignment["published"],
+                    assignment_overrides=assignment["overrides"],
                     max_attempts=max_attempts
                 )
         
