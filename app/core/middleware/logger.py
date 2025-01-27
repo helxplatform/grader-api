@@ -3,11 +3,14 @@ import logging
 import time
 from typing import Callable
 from uuid import uuid4
+
 from fastapi import FastAPI, Response
-from starlette.types import Message
-from starlette.requests import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.types import Message
+
 from app.core.utils.async_iterator_wrapper import AsyncIteratorWrapper
+
 
 class LogMiddleware(BaseHTTPMiddleware):
 
@@ -32,12 +35,21 @@ class LogMiddleware(BaseHTTPMiddleware):
 
         await self.set_body(request)
 
-        request_id = str(uuid4())
-        response, response_dict = await self._create_response_log(
-            call_next,
-            request,
-            request_id
-        )
+        request_id = ""
+        if request.headers is not None and "X-API-REQUEST-ID" in request.headers.keys():
+            request_id = request.headers["X-API-REQUEST-ID"]
+        else:
+            request_id = str(uuid4())
+
+        start_time = time.perf_counter()
+        response = await self._execute_request(call_next, request, request_id)
+        finish_time = time.perf_counter()
+
+        execution_time = finish_time - start_time
+        response_dict = {
+            "status_code": response.status_code,
+            "execution_time": f"{execution_time:0.4f}s",
+        }
 
         resp_body = [section async for section in response.__dict__["body_iterator"]]
         response.__setattr__("body_iterator", AsyncIteratorWrapper(resp_body))
@@ -53,8 +65,9 @@ class LogMiddleware(BaseHTTPMiddleware):
             # and we need to log it. So just log the exception and return, don't log
             # the request as you would normally.
             request_log = {
-                "path": request.url.path,
                 "method": request.method,
+                "endpoint": request.url.path,
+                "user": request.user.onyen if hasattr(request.user, "onyen") else None,
             }
             if type(resp_body) is dict:
                 request_log["error_code"] = resp_body["error_code"]
@@ -98,26 +111,6 @@ class LogMiddleware(BaseHTTPMiddleware):
             request_log_dict["body"] = None
 
         return request_log_dict
-    
-    async def _create_response_log(
-        self,
-        call_next: Callable,
-        request: Request,
-        request_id
-    ) -> Response:
-
-        start_time = time.perf_counter()
-        response = await self._execute_request(call_next, request, request_id)
-        finish_time = time.perf_counter()
-
-        execution_time = finish_time - start_time
-
-        response_log_dict = {
-            "status_code": response.status_code,
-            "execution_time": f"{execution_time:0.4f}s",
-        }
-
-        return response, response_log_dict
 
     async def _execute_request(
         self,
