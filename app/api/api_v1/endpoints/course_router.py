@@ -1,14 +1,11 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi_pagination import Page
-from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
-from app.models import CourseModel, InstructorModel
-from app.services import CourseService
+from app.core.dependencies import (CourseListPermission,
+                                   InstructorListPermission,
+                                   PermissionDependency, get_db)
 from app.schemas import CourseWithInstructorsSchema
-from app.core.dependencies import get_db, PermissionDependency, CourseListPermission, InstructorListPermission
+from app.services import CourseService
 
 router = APIRouter()
 

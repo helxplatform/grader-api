@@ -1,12 +1,19 @@
 from typing import Dict, List, Optional
-from pydantic import BaseModel
-from fastapi import APIRouter, Request, Query, Depends
+
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import FileResponse, StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from app.schemas import SubmissionSchema
-from app.services import SubmissionService, StudentService, AssignmentService, GiteaService, CourseService, LmsSyncService
+
+from app.core.dependencies import (PermissionDependency,
+                                   SubmissionCreatePermission,
+                                   SubmissionDownloadPermission,
+                                   SubmissionListPermission,
+                                   UserIsStudentPermission, get_db)
 from app.models import SubmissionModel
-from app.core.dependencies import get_db, PermissionDependency, UserIsStudentPermission, SubmissionCreatePermission, SubmissionListPermission, SubmissionDownloadPermission
+from app.schemas import SubmissionSchema
+from app.services import (AssignmentService, CourseService, GiteaService,
+                          LmsSyncService, StudentService, SubmissionService)
 
 router = APIRouter()
 
@@ -50,7 +57,6 @@ async def get_submissions(
     assignment_id: int,
     student_onyen: Optional[str] = Query(default=None, description="Student's onyen. Lists all students if omitted.")
 ):
-    onyen = request.user.onyen
     submission_service = SubmissionService(db)
     assignment = await AssignmentService(db).get_assignment_by_id(assignment_id)
     if student_onyen is None:

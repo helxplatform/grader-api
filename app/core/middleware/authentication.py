@@ -1,12 +1,14 @@
-import jwt
 from typing import Optional, Tuple
+
+import jwt
 from pydantic import BaseModel, Field
 from starlette.authentication import AuthenticationBackend
-from starlette.middleware.authentication import (
-    AuthenticationMiddleware as BaseAuthenticationMiddleware,
-)
+from starlette.middleware.authentication import \
+    AuthenticationMiddleware as BaseAuthenticationMiddleware
 from starlette.requests import HTTPConnection
+
 from app.core.config import settings
+
 
 class CurrentUser(BaseModel, validate_assignment=True):
     id: int = Field(None, description="ID of the current user")
@@ -51,9 +53,9 @@ class AuthBackend(AuthenticationBackend):
         return True, current_user
     
     async def handle_impersonated_auth(self):
+        from app.core.exceptions import UserNotFoundException
         from app.database import SessionLocal
         from app.services import UserService
-        from app.core.exceptions import UserNotFoundException
 
         current_user = CurrentUser()
 

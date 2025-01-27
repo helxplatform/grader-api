@@ -1,12 +1,14 @@
-import os
-import glob
-import uvicorn
 import asyncio
+import glob
+import os
+
+import uvicorn
 from dotenv import load_dotenv
-from alembic.config import Config
+
 from alembic import command
-from app.services import LmsSyncService
+from alembic.config import Config
 from app.database import SessionLocal
+from app.services import LmsSyncService
 
 
 def positive_int(value):

@@ -1,10 +1,9 @@
-from sqlalchemy import (
-    Column, Sequence, ForeignKey,
-    Integer, String, DateTime,
-    Boolean, func
-)
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer,
+                        Sequence, String, func)
+from sqlalchemy.orm import backref, relationship
+
 from app.database import Base
+
 
 class SubmissionModel(Base):
     __tablename__ = "submission"

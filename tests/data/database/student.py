@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
-from app.models import StudentModel
+
 from app.core.role_permissions import student_role
+from app.models import StudentModel
 
 basic_student = StudentModel(
     onyen="basicstudent",

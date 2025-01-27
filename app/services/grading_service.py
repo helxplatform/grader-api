@@ -1,27 +1,33 @@
-import tempfile
-import zipfile
 import glob
 import json
-from typing import BinaryIO, Optional
+import tempfile
+import zipfile
 from collections import Counter
-from otter.assign import main as otter_assign
-from otter.run import main as otter_run
-from otter.export import export_notebook
-from pydantic import BaseModel
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from io import BytesIO
 from pathlib import Path
+from typing import BinaryIO, Optional
+from zoneinfo import ZoneInfo
+
+from otter.assign import main as otter_assign
+from otter.export import export_notebook
+from otter.run import main as otter_run
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from app.core.config import settings, DevPhase
-from app.core.exceptions import (
-    SubmissionNotFoundException, OtterConfigViolationException, AutogradingDisabledException,
-    StudentGradedMultipleTimesException, SubmissionMismatchException
-)
+
+from app.core.config import DevPhase, settings
+from app.core.exceptions import (AutogradingDisabledException,
+                                 OtterConfigViolationException,
+                                 StudentGradedMultipleTimesException,
+                                 SubmissionMismatchException,
+                                 SubmissionNotFoundException)
 from app.core.utils.datetime import get_now_with_tzinfo
-from app.services import StudentService, SubmissionService, CourseService, GiteaService
-from app.models import AssignmentModel, SubmissionModel, GradeReportModel
-from app.schemas import GradeReportSchema, SubmissionGradeSchema, IdentifiableSubmissionGradeSchema
+from app.models import AssignmentModel, GradeReportModel, SubmissionModel
+from app.schemas import (GradeReportSchema, IdentifiableSubmissionGradeSchema,
+                         SubmissionGradeSchema)
+from app.services import (CourseService, GiteaService, StudentService,
+                          SubmissionService)
+
 
 class GradingService:
     def __init__(self, session: Session):
@@ -145,7 +151,7 @@ class GradingService:
         *,
         dry_run=False
     ) -> GradeReportModel:
-        from app.services import LmsSyncService, CleanupService
+        from app.services import CleanupService, LmsSyncService
 
         if assignment.manual_grading:
             raise AutogradingDisabledException()
@@ -250,7 +256,7 @@ class GradingService:
         *,
         dry_run=False
     ) -> GradeReportModel:
-        from app.services import LmsSyncService, CleanupService
+        from app.services import CleanupService, LmsSyncService
         
         lms_sync_service = LmsSyncService(self.session)
 

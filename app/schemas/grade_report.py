@@ -1,7 +1,10 @@
-from typing import Optional
-from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+
 from app.models import SubmissionModel
+
 
 class GradeReportSchema(BaseModel):
     id: int

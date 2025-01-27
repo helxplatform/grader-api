@@ -1,5 +1,7 @@
 from datetime import datetime
+
 from .user import UserSchema
+
 
 class StudentSchema(UserSchema):
     fork_remote_url: str

@@ -2,9 +2,11 @@
 
 import os
 import sys
+
 from dotenv import load_dotenv
-from alembic.config import Config
+
 from alembic import command
+from alembic.config import Config
 
 # Load .env file if exists
 if os.path.exists('.env'):

@@ -1,8 +1,11 @@
 import ldap3
 from ldap3.core.exceptions import LDAPSocketOpenError
 from pydantic import BaseModel
+
 from app.core.config import settings
-from app.core.exceptions import LDAPConnectionTimeoutException, UserNotFoundException
+from app.core.exceptions import (LDAPConnectionTimeoutException,
+                                 UserNotFoundException)
+
 
 class LDAPUserInfoSchema(BaseModel):
     onyen: str

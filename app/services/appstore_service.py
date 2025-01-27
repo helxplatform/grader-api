@@ -1,10 +1,15 @@
+import httpx
 from sqlalchemy.orm import Session
-from app.services import UserService
+
+from app.core.config import settings
+from app.core.exceptions import (AppstoreUnsupportedUserTypeException,
+                                 AppstoreUserDoesNotMatchException,
+                                 AppstoreUserNotFoundException,
+                                 UserNotFoundException)
 from app.models import UserModel
 from app.models.user import UserType
-from app.core.config import settings
-from app.core.exceptions import AppstoreUserNotFoundException, AppstoreUserDoesNotMatchException, AppstoreUnsupportedUserTypeException, UserNotFoundException
-import httpx
+from app.services import UserService
+
 
 class AppstoreService:
     def __init__(self, session: Session, appstore_identity_token: str, user_type: UserType):

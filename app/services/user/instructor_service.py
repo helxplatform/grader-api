@@ -1,10 +1,14 @@
 from typing import List
-from app.events import dispatch
-from app.models import InstructorModel
-from app.events import CreateUserCrudEvent
+
+from app.core.exceptions import (NotAnInstructorException,
+                                 UserAlreadyExistsException,
+                                 UserNotFoundException)
 from app.core.role_permissions import instructor_role
-from app.core.exceptions import NotAnInstructorException, UserAlreadyExistsException, UserNotFoundException
+from app.events import CreateUserCrudEvent, dispatch
+from app.models import InstructorModel
+
 from .user_service import UserService
+
 
 class InstructorService(UserService):
     async def list_instructors(self) -> List[InstructorModel]:
@@ -16,7 +20,7 @@ class InstructorService(UserService):
         name: str,
         email: str
     ) -> InstructorModel:
-        from app.services import GiteaService, CourseService, CleanupService
+        from app.services import CleanupService, CourseService, GiteaService
 
         try:
             await super().get_user_by_onyen(onyen)

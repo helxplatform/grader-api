@@ -1,6 +1,7 @@
+from mimetypes import guess_type
 from pathlib import Path
 from typing import IO
-from mimetypes import guess_type
+
 
 def guess_mimetype(path: str | Path) -> str | None:
     ext = Path(path).suffix.lstrip(".").lower()

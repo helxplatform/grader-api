@@ -1,4 +1,5 @@
 import logging
+
 from fastapi_events.dispatcher import dispatch as _dispatch
 
 logger = logging.getLogger(__file__)

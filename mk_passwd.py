@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import subprocess
 import secrets
 import string
+import subprocess
 
 # Generate a random password of length 12
 alphabet = string.ascii_letters + string.digits

@@ -1,20 +1,21 @@
-import sys
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 from typing import List
+
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware import Middleware
-from fastapi_pagination import add_pagination
-from fastapi_events.middleware import EventHandlerASGIMiddleware
+from fastapi.responses import JSONResponse
 from fastapi_events.handlers.local import local_handler
+from fastapi_events.middleware import EventHandlerASGIMiddleware
+from fastapi_pagination import add_pagination
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.api_v1 import api_router
-from app.core.config import settings, DevPhase
-from app.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddleware
+from app.core.config import DevPhase, settings
 from app.core.exceptions import CustomException
-
+from app.core.middleware import (AuthBackend, AuthenticationMiddleware,
+                                 LogMiddleware)
 
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
@@ -77,6 +78,7 @@ def init_listeners(app: FastAPI):
 def init_monkeypatch():
     ### Monkey patch serializers for custom types
     from pydantic.json import ENCODERS_BY_TYPE
+
     from app.schemas._unset import _UNSET
     ENCODERS_BY_TYPE[_UNSET] = lambda _: None
 

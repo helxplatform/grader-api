@@ -1,7 +1,7 @@
-from app.schemas import RefreshTokenSchema
 from app.core.config import settings
 from app.core.exceptions.token import DecodeTokenException
 from app.core.utils.token_helper import TokenHelper
+
 
 class JwtService:
     async def verify_token(self, token: str) -> None:

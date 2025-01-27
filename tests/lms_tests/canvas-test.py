@@ -1,6 +1,7 @@
 import json
-from fastapi import FastAPI, HTTPException
+
 import requests
+from fastapi import FastAPI
 
 app = FastAPI()
 

@@ -1,13 +1,16 @@
 """ User router should contain endpoints that are able to be generalized to a user, rather than a specific account type. """
 
-from fastapi import APIRouter, Request, Depends
-from sqlalchemy.orm import Session
 from typing import Union
-from app.schemas import StudentSchema, InstructorSchema
-from app.services import UserService, LDAPService
-from app.services.ldap_service import LDAPUserInfoSchema
-from app.core.dependencies import get_db, PermissionDependency, UserIsSuperuserPermission, RequireLoginPermission
 
+from fastapi import APIRouter, Depends, Request
+from sqlalchemy.orm import Session
+
+from app.core.dependencies import (PermissionDependency,
+                                   RequireLoginPermission,
+                                   UserIsSuperuserPermission, get_db)
+from app.schemas import InstructorSchema, StudentSchema
+from app.services import LDAPService, UserService
+from app.services.ldap_service import LDAPUserInfoSchema
 
 router = APIRouter()
 

@@ -1,8 +1,11 @@
-from typing import List
 from datetime import datetime
+from typing import List
+
 from pydantic import BaseModel
-from .user import InstructorSchema
+
 from ._unset import UNSET
+from .user import InstructorSchema
+
 
 class CourseSchema(BaseModel):
     id: int

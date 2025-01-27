@@ -1,5 +1,7 @@
 from pydantic import BaseModel
+
 from app.models.user import UserType
+
 
 class UserSchema(BaseModel):
     id: int

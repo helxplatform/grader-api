@@ -1,5 +1,6 @@
 from .base import CustomException
 
+
 class AssignmentDueBeforeOpenException(CustomException):
     code = 400
     error_code = "ASSIGNMENT__DUE_BEFORE_OPEN"

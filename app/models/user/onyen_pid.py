@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, Text, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKey, String
+
 from app.database import Base
+
 
 class OnyenPIDModel(Base):
     __tablename__ = "user_onyen_pid"

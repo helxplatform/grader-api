@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class CanvasWorkflowStateFilter(str, Enum):
     SUBMITTED      = 'submitted'
     UNSUBMITTED    = 'unsubmitted'

@@ -1,6 +1,9 @@
-from sqlalchemy import Column, Integer, Boolean, Interval, DateTime, Text, ForeignKey, func
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer,
+                        Interval, Text, func)
 from sqlalchemy.orm import relationship
+
 from .user import UserModel, UserType
+
 
 class StudentModel(UserModel):
     __tablename__ = "student"

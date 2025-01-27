@@ -1,9 +1,9 @@
 from fastapi import APIRouter
-from .endpoints import (
-    submission_router, assignment_router, user_router,
-    student_router, instructor_router, course_router,
-    settings_router, auth_router, lms_router, health_router
-)
+
+from .endpoints import (assignment_router, auth_router, course_router,
+                        health_router, instructor_router, lms_router,
+                        settings_router, student_router, submission_router,
+                        user_router)
 
 api_router = APIRouter()
 api_router.include_router(submission_router.router, tags=["submissions"])

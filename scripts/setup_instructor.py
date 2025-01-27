@@ -1,7 +1,9 @@
 import asyncio
+
+from app.core.exceptions import UserAlreadyExistsException
 from app.database import SessionLocal
 from app.services import InstructorService
-from app.core.exceptions import UserAlreadyExistsException
+
 
 async def create_instructor(onyen: str, first_name: str, last_name: str, email: str):
     session = SessionLocal()
