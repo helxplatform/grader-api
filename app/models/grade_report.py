@@ -1,10 +1,14 @@
 from __future__ import annotations
-from sqlalchemy import Column, Sequence, ForeignKey, Integer, Float, DateTime, ARRAY, Text, func
-from sqlalchemy.orm import relationship, backref
+
+import numpy as np
+from sqlalchemy import (ARRAY, Column, DateTime, Float, ForeignKey, Integer,
+                        Sequence, Text, func)
+from sqlalchemy.orm import backref, relationship
+
 from app.database import Base
 from app.models.assignment import AssignmentModel
 from app.schemas.grade_report import SubmissionGradeSchema
-import numpy as np
+
 
 class GradeReportModel(Base):
     __tablename__ = "grade_report"

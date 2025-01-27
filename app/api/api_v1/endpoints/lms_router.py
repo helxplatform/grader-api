@@ -1,12 +1,12 @@
 from typing import List
-from pydantic import BaseModel
+
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
+from app.core.dependencies import (PermissionDependency,
+                                   UserIsInstructorPermission, get_db)
 from app.services import LmsSyncService
-from app.core.dependencies import (
-    get_db, PermissionDependency,
-    UserIsInstructorPermission
-)
 
 router = APIRouter()
 

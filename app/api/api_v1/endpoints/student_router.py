@@ -1,10 +1,15 @@
 from typing import List
+
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
+
+from app.core.dependencies import (PermissionDependency,
+                                   StudentCreatePermission,
+                                   StudentListPermission,
+                                   UserIsStudentPermission, get_db)
 from app.schemas import StudentSchema
 from app.services import StudentService
-from app.core.dependencies import get_db, PermissionDependency, StudentListPermission, StudentCreatePermission, UserIsStudentPermission
 
 router = APIRouter()
 

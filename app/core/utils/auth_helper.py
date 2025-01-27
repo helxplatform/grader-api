@@ -1,5 +1,6 @@
-import string
 import secrets
+import string
+
 from passlib.context import CryptContext
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

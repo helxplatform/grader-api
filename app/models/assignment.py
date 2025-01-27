@@ -1,11 +1,10 @@
 from pathlib import Path
-from sqlalchemy import (
-    Column, Sequence, Boolean,
-    Integer, Text, DateTime,
-    func
-)
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, Sequence, Text, func
 from sqlalchemy.ext.hybrid import hybrid_property
+
 from app.database import Base
+
 
 class AssignmentModel(Base):
     __tablename__ = "assignment"

@@ -1,14 +1,14 @@
 import datetime
 import unittest
 from unittest.mock import MagicMock
+
+from app.core.exceptions import (AssignmentClosedException,
+                                 AssignmentNotCreatedException,
+                                 AssignmentNotOpenException)
+from app.models import AssignmentModel, ExtraTimeModel, StudentModel
 from app.models.course import CourseModel
 from app.services import StudentAssignmentService
-from app.models import AssignmentModel, StudentModel, ExtraTimeModel
-from app.core.exceptions import (
-    AssignmentNotOpenException,
-    AssignmentNotCreatedException,
-    AssignmentClosedException
-)
+
 
 class TestStudentAssignmentService(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):

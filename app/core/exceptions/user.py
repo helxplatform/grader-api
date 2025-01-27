@@ -1,5 +1,6 @@
 from .base import CustomException
 
+
 class UserAlreadyExistsException(CustomException):
     code = 409
     error_code = "USER__ONYEN_OR_EMAIL_ALREADY_EXISTS"

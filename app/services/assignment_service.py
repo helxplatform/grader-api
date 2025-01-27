@@ -1,24 +1,27 @@
-from typing import List
-from pydantic import PositiveInt
 from datetime import datetime, timedelta
+from typing import List
+
+from pydantic import PositiveInt
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+from app.core.exceptions import (AssignmentClosedException,
+                                 AssignmentDueBeforeOpenException,
+                                 AssignmentNotFoundException,
+                                 AssignmentNotOpenException,
+                                 AssignmentNotPublishedException,
+                                 SubmissionMaxAttemptsReachedException)
 from app.core.exceptions.assignment import AssignmentCannotBeUnpublished
-from app.events import dispatch
-from app.models import AssignmentModel, InstructorModel, StudentModel, ExtraTimeModel
-from app.models.course import CourseModel
-from app.schemas import AssignmentSchema, InstructorAssignmentSchema, StudentAssignmentSchema, UpdateAssignmentSchema
-from app.events import CreateAssignmentCrudEvent, ModifyAssignmentCrudEvent, DeleteAssignmentCrudEvent
-from app.core.exceptions import (
-    AssignmentNotFoundException,
-    AssignmentNotPublishedException,
-    AssignmentNotOpenException,
-    AssignmentClosedException,
-    AssignmentDueBeforeOpenException,
-    SubmissionMaxAttemptsReachedException
-)
 from app.enums.assignment_status import AssignmentStatus
+from app.events import (CreateAssignmentCrudEvent, DeleteAssignmentCrudEvent,
+                        ModifyAssignmentCrudEvent, dispatch)
+from app.models import (AssignmentModel, ExtraTimeModel, InstructorModel,
+                        StudentModel)
+from app.models.course import CourseModel
+from app.schemas import (AssignmentSchema, InstructorAssignmentSchema,
+                         StudentAssignmentSchema, UpdateAssignmentSchema)
 from app.services.submission_service import SubmissionService
+
 
 class AssignmentService:
     def __init__(self, session: Session):
@@ -34,7 +37,8 @@ class AssignmentService:
         due_date: datetime | None,
         is_published: bool
     ) -> AssignmentModel:
-        from app.services import GiteaService, FileOperation, FileOperationType, CourseService
+        from app.services import (CourseService, FileOperation,
+                                  FileOperationType, GiteaService)
 
         if available_date is not None and due_date is not None and available_date >= due_date:
             raise AssignmentDueBeforeOpenException

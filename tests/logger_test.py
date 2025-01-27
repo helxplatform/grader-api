@@ -1,7 +1,8 @@
 import json
-from fastapi import Request, HTTPException
-import sys
 import os
+import sys
+
+from fastapi import HTTPException, Request
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, ".."))

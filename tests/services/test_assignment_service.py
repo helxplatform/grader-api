@@ -1,12 +1,15 @@
-from datetime import datetime, timedelta, date
 import json
 import unittest
+from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
+
 from sqlalchemy.orm import Session
-from app.services import AssignmentService
+
+from app.core.exceptions import AssignmentNotFoundException
 from app.models import AssignmentModel
 from app.schemas import UpdateAssignmentSchema
-from app.core.exceptions import AssignmentNotFoundException
+from app.services import AssignmentService
+
 
 class TestAssignmentService(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):

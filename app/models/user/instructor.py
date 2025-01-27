@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer
+
 from .user import UserModel, UserType
+
 
 class InstructorModel(UserModel):
     __tablename__ = "instructor"

@@ -1,16 +1,17 @@
 import unittest
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
-from app.services import CourseService
+
+from app.core.exceptions import (CourseAlreadyExistsException,
+                                 MultipleCoursesExistException,
+                                 NoCourseExistsException)
 from app.models import CourseModel, InstructorModel
-from tests.data.database.course import data
 from app.schemas import CourseWithInstructorsSchema
-from app.core.exceptions import (
-    MultipleCoursesExistException,
-    NoCourseExistsException,
-    CourseAlreadyExistsException
-)
+from app.services import CourseService
+from tests.data.database.course import data
+
 
 async def async_mock(*args, **kwargs):
     pass

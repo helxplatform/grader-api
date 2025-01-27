@@ -1,6 +1,9 @@
-from typing import Optional, Any, Dict, List
 from enum import Enum
-from pydantic import BaseModel, BaseSettings, PostgresDsn, validator, root_validator
+from typing import Any, Dict, List, Optional
+
+from pydantic import (BaseModel, BaseSettings, PostgresDsn, root_validator,
+                      validator)
+
 
 class DevPhase(str, Enum):
     DEV = "dev"

@@ -1,9 +1,12 @@
 import unittest
+from unittest.mock import MagicMock, patch
+
 from fastapi import Request
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock, patch
-from app.api.api_v1.endpoints.course_router import router
 from sqlalchemy.orm import Session
+
+from app.api.api_v1.endpoints.course_router import router
+
 
 class TestCourseEndpoints(unittest.IsolatedAsyncioTestCase):
 

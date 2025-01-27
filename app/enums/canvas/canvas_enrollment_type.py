@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class CanvasEnrollmentType(str, Enum):
     STUDENT     = 'student'
     TEACHER     = 'teacher'

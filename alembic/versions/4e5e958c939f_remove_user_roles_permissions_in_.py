@@ -5,10 +5,10 @@ Revises: 9567f2421e2f
 Create Date: 2023-09-15 16:57:46.531630+00:00
 
 """
-from alembic import op
-from app.core.role_permissions import UserRoleType
 import sqlalchemy as sa
 
+from alembic import op
+from app.core.role_permissions import UserRoleType
 
 # revision identifiers, used by Alembic.
 revision = '4e5e958c939f'

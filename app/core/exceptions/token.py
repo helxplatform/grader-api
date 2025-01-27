@@ -1,5 +1,6 @@
 from .base import CustomException
 
+
 class DecodeTokenException(CustomException):
     code = 400
     error_code = "TOKEN__DECODE_ERROR"

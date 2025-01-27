@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 
-
 router = APIRouter()
 
 @router.get("/health/live", response_model=None, status_code=200)

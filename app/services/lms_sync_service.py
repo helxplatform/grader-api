@@ -1,19 +1,22 @@
 from sqlalchemy.orm import Session
+
 from app.core.config import settings
-from app.services.canvas_service import CanvasService, UpdateCanvasAssignmentBody
-from app.services.course_service import CourseService
-from app.services.ldap_service import LDAPService
-from app.services.assignment_service import AssignmentService
-from app.services.grading_service import GradingService
-from app.services.user.student_service import StudentService
-from app.services.user.instructor_service import InstructorService
+from app.core.exceptions import (AssignmentNotFoundException,
+                                 LMSUserNotFoundException,
+                                 NoCourseExistsException,
+                                 UserNotFoundException)
 from app.models import AssignmentModel, SubmissionModel
-from app.schemas.course import UpdateCourseSchema
 from app.schemas.assignment import UpdateAssignmentSchema
-from app.core.exceptions import (
-    AssignmentNotFoundException, NoCourseExistsException, 
-    UserNotFoundException, LMSUserNotFoundException
-)
+from app.schemas.course import UpdateCourseSchema
+from app.services.assignment_service import AssignmentService
+from app.services.canvas_service import (CanvasService,
+                                         UpdateCanvasAssignmentBody)
+from app.services.course_service import CourseService
+from app.services.grading_service import GradingService
+from app.services.ldap_service import LDAPService
+from app.services.user.instructor_service import InstructorService
+from app.services.user.student_service import StudentService
+
 
 class LmsSyncService:
     def __init__(self, session: Session):

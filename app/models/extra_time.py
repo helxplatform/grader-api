@@ -1,10 +1,9 @@
-from sqlalchemy import (
-    Column, Sequence, ForeignKey,
-    Integer, Interval,
-)
+from sqlalchemy import Column, ForeignKey, Integer, Interval, Sequence
+from sqlalchemy.orm import backref, relationship
 from sqlalchemy.schema import UniqueConstraint
-from sqlalchemy.orm import relationship, backref
+
 from app.database import Base
+
 
 class ExtraTimeModel(Base):
     __tablename__ = "extra_time"

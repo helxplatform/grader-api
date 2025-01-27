@@ -1,6 +1,8 @@
-from pydantic import BaseModel
 from datetime import datetime
+
 from dateutil import parser as dateparser
+from pydantic import BaseModel
+
 
 class CommitSchema(BaseModel):
     sha: str

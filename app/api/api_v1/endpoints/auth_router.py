@@ -1,11 +1,15 @@
 from typing import Annotated
+
+from fastapi import APIRouter, Depends, Header, Request
 from pydantic import BaseModel
-from fastapi import APIRouter, Request, Depends, Header
 from sqlalchemy.orm import Session
-from app.schemas import RefreshTokenSchema, UserRoleSchema, UserPermissionSchema
-from app.services import UserService, JwtService, AppstoreService, GiteaService
+
+from app.core.dependencies import (PermissionDependency,
+                                   RequireLoginPermission, get_db)
 from app.models.user import UserType
-from app.core.dependencies import get_db, PermissionDependency, RequireLoginPermission
+from app.schemas import (RefreshTokenSchema, UserPermissionSchema,
+                         UserRoleSchema)
+from app.services import AppstoreService, GiteaService, JwtService, UserService
 
 router = APIRouter()
 

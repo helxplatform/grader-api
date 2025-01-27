@@ -1,5 +1,5 @@
-from typing import Tuple
 from email.message import EmailMessage
+from typing import Tuple
 
 """ https://docs.python.org/3.11/library/cgi.html#cgi.parse_header """
 def parse_content_disposition_header(header_value: str) -> Tuple[str, dict]:

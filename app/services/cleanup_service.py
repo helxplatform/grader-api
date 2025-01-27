@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
-from app.models import UserModel, CourseModel, GradeReportModel
+
+from app.models import CourseModel, GradeReportModel, UserModel
 from app.services import GiteaService, KubernetesService
+
 
 class CleanupService:
     class Grading:

@@ -6,13 +6,14 @@ from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security.base import SecurityBase
 
 from app.core.config import settings
-from app.database import SessionLocal
-from app.models import StudentModel, InstructorModel
+from app.core.exceptions import (MissingPermissionException,
+                                 NotAnInstructorException,
+                                 NotAStudentException, NotASuperuserException,
+                                 UnauthorizedException, UserNotFoundException)
 from app.core.role_permissions import UserPermission
-from app.core.exceptions import (
-    UnauthorizedException, MissingPermissionException, UserNotFoundException,
-    NotAStudentException, NotAnInstructorException, NotASuperuserException
-)
+from app.database import SessionLocal
+from app.models import InstructorModel, StudentModel
+
 
 class BasePermission(ABC):
     def __init__(self, db, user):

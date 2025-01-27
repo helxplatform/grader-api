@@ -1,6 +1,8 @@
 from enum import Enum
-from pydantic import BaseModel
+
 from fastapi_events.registry.payload_schema import registry
+from pydantic import BaseModel
+
 
 class SyncEvents(Enum):
     SYNC_CREATE_ASSIGNMENT = "SYNC_CREATE_ASSIGNMENT"

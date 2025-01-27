@@ -1,7 +1,9 @@
 import unittest
 from unittest.mock import patch
+
 from app.core.exceptions.token import DecodeTokenException
 from app.services.jwt_service import JwtService
+
 
 class TestJwtService(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):

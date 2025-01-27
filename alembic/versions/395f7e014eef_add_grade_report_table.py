@@ -5,9 +5,9 @@ Revises: dcccada31cf2
 Create Date: 2024-07-09 19:28:42.850654+00:00
 
 """
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '395f7e014eef'

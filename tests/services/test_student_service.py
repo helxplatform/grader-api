@@ -1,9 +1,13 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from sqlalchemy.orm import Session
-from app.services.user.student_service import StudentService  # Adjust the import based on your actual structure
-from app.models import StudentModel
+
 from app.core.exceptions import UserAlreadyExistsException
+from app.models import StudentModel
+from app.services.user.student_service import \
+    StudentService  # Adjust the import based on your actual structure
+
 
 class TestStudentService(unittest.IsolatedAsyncioTestCase):
 

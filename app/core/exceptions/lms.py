@@ -1,5 +1,7 @@
 from httpx import Response
+
 from .base import CustomException
+
 
 class LMSNoAssignmentFetchedException(CustomException):
     code = 404

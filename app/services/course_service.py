@@ -1,11 +1,15 @@
-from app.core.config import settings
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
-from app.events import dispatch
+
+from app.core.config import settings
+from app.core.exceptions import (CourseAlreadyExistsException,
+                                 MultipleCoursesExistException,
+                                 NoCourseExistsException)
+from app.events import CreateCourseCrudEvent, ModifyCourseCrudEvent, dispatch
 from app.models import CourseModel
-from app.schemas import CourseWithInstructorsSchema, CourseSchema, UpdateCourseSchema
-from app.events import CreateCourseCrudEvent, ModifyCourseCrudEvent
-from app.core.exceptions import MultipleCoursesExistException, NoCourseExistsException, CourseAlreadyExistsException
+from app.schemas import (CourseSchema, CourseWithInstructorsSchema,
+                         UpdateCourseSchema)
+
 
 class CourseService:
     def __init__(self, session: Session):
@@ -32,7 +36,8 @@ class CourseService:
 
     
     async def create_course(self, name: str) -> CourseModel:
-        from app.services import GiteaService, CleanupService, FileOperation, FileOperationType
+        from app.services import (CleanupService, FileOperation,
+                                  FileOperationType, GiteaService)
 
         try:
             await self.get_course()

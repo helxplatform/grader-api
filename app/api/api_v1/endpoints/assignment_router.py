@@ -1,19 +1,24 @@
-from pydantic import BaseModel, PositiveInt
 from datetime import datetime
-from typing import List, Union, Optional
+from typing import List, Optional, Union
+
 from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel, PositiveInt
 from sqlalchemy.orm import Session
-from app.models import StudentModel, InstructorModel
-from app.schemas import (
-    InstructorAssignmentSchema, StudentAssignmentSchema, AssignmentSchema,
-    UpdateAssignmentSchema, GradeReportSchema, IdentifiableSubmissionGradeSchema
-)
+
+from app.core.dependencies import (AssignmentModifyPermission,
+                                   PermissionDependency,
+                                   RequireLoginPermission,
+                                   UserIsInstructorPermission, get_db)
+from app.models import InstructorModel, StudentModel
+from app.schemas import (AssignmentSchema, GradeReportSchema,
+                         IdentifiableSubmissionGradeSchema,
+                         InstructorAssignmentSchema, StudentAssignmentSchema,
+                         UpdateAssignmentSchema)
 from app.schemas._unset import UNSET
-from app.services import (
-    AssignmentService, InstructorAssignmentService, StudentAssignmentService,
-    UserService, LmsSyncService, GradingService, SubmissionService
-)
-from app.core.dependencies import get_db, PermissionDependency, RequireLoginPermission, AssignmentModifyPermission, UserIsInstructorPermission
+from app.services import (AssignmentService, GradingService,
+                          InstructorAssignmentService, LmsSyncService,
+                          StudentAssignmentService, SubmissionService,
+                          UserService)
 from app.services.course_service import CourseService
 
 router = APIRouter()

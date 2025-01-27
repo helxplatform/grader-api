@@ -1,11 +1,13 @@
 import unittest
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.api_v1.endpoints.student_router import router
 from app.schemas import StudentSchema
-from pydantic import BaseModel
+
 
 class CreateStudentBody(BaseModel):
     onyen: str

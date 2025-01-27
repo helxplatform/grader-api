@@ -1,17 +1,15 @@
 from sqlalchemy.orm import Session
-from app.events import dispatch
-from app.models import UserModel, AutoPasswordAuthModel
-from app.events import DeleteUserCrudEvent
-from app.schemas import RefreshTokenSchema
+
 from app.core.config import settings
-from app.core.utils.token_helper import TokenHelper
-from app.core.utils.auth_helper import PasswordHelper
+from app.core.exceptions import (PasswordDoesNotMatchException,
+                                 UserNotFoundException)
 from app.core.middleware.authentication import CurrentUser
-from app.core.exceptions import (
-    PasswordDoesNotMatchException,
-    UserNotFoundException,
-    PasswordDoesNotMatchException
-)
+from app.core.utils.auth_helper import PasswordHelper
+from app.core.utils.token_helper import TokenHelper
+from app.events import DeleteUserCrudEvent, dispatch
+from app.models import AutoPasswordAuthModel, UserModel
+from app.schemas import RefreshTokenSchema
+
 
 class UserService:
     def __init__(self, session: Session):
@@ -82,7 +80,8 @@ class UserService:
         self,
         onyen: str
     ) -> None:
-        from app.services import GiteaService, KubernetesService, CourseService, CleanupService
+        from app.services import (CleanupService, CourseService, GiteaService,
+                                  KubernetesService)
         
         course = await CourseService(self.session).get_course()
         user = await self.get_user_by_onyen(onyen)

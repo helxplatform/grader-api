@@ -1,7 +1,9 @@
 import asyncio
+
+from app.core.exceptions import CourseAlreadyExistsException
 from app.database import SessionLocal
 from app.services import CourseService
-from app.core.exceptions import CourseAlreadyExistsException
+
 
 async def create_course(name: str):
     session = SessionLocal()

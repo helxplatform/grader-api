@@ -1,5 +1,6 @@
 from .base import CustomException
 
+
 class AppstoreUserNotFoundException(CustomException):
     code = 404
     error_code = "APPSTORE__USER_NOT_FOUND"

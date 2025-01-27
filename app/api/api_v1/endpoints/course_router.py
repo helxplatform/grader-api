@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
-from app.services import CourseService
+from app.core.dependencies import (CourseListPermission,
+                                   InstructorListPermission,
+                                   PermissionDependency, get_db)
 from app.schemas import CourseWithInstructorsSchema
-from app.core.dependencies import get_db, PermissionDependency, CourseListPermission, InstructorListPermission
+from app.services import CourseService
 
 router = APIRouter()
 

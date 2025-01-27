@@ -1,5 +1,6 @@
 from .base import CustomException
 
+
 class MultipleCoursesExistException(CustomException):
     code = 500
     error_code = "COURSE__MULTIPLE_COURSES_EXIST"
