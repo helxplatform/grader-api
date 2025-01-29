@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.exceptions.assignment import AssignmentCannotBeUnpublished
 from app.events import dispatch
-from app.models import AssignmentModel, InstructorModel, StudentModel, ExtraTimeModel
+from app.models import AssignmentModel, InstructorModel, StudentModel, ExtraTimeModel, AssignmentOverrideModel
 from app.models.course import CourseModel
 from app.schemas import (
     AssignmentSchema,
@@ -40,7 +40,7 @@ class AssignmentService:
         available_date: datetime | None,
         due_date: datetime | None,
         is_published: bool,
-        assignment_override: AssignmentOverrideSchema | None
+        assignment_overrides: list | None
     ) -> AssignmentModel:
         from app.services import GiteaService, FileOperation, FileOperationType, CourseService
 
@@ -49,6 +49,8 @@ class AssignmentService:
 
         gitea_service = GiteaService(self.session)
         course_service = CourseService(self.session)
+
+        #override = AssignmentOverrideModel(id)
 
         assignment = AssignmentModel(
             id=id,

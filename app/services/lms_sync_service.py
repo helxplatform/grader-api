@@ -7,6 +7,7 @@ from app.services.canvas_service import CanvasService, UpdateCanvasAssignmentBod
 from app.services.course_service import CourseService
 from app.services.ldap_service import LDAPService
 from app.services.assignment_service import AssignmentService
+from app.services.assignment_override_service import AssignmentOverrideService
 from app.services.grading_service import GradingService
 from app.services.user.student_service import StudentService
 from app.services.user.instructor_service import InstructorService
@@ -28,6 +29,7 @@ class LmsSyncService:
         self.instructor_service = InstructorService(session)
         self.grading_service = GradingService(session)
         self.ldap_service = LDAPService()
+        self.assignment_override_service = AssignmentOverrideService(session)
         self.session = session
 
     async def get_assignment(self, assignment_id):
@@ -78,9 +80,10 @@ class LmsSyncService:
                 ))
 
             except AssignmentNotFoundException as e:
-                # create assignment override, add service 
-                # if assignment["has_overrides"]:
-                #     await self.assignment_override_service.create_assignment_override()
+                # create assignment overrides
+                overrides_collection = []
+                if assignment["has_overrides"]:
+                    overrides_collection = await self.assignment_override_service.create_assignment_override(assignment["overrides"])
 
                 #create a new assignment
                 await self.assignment_service.create_assignment(
@@ -90,7 +93,7 @@ class LmsSyncService:
                     available_date=assignment["unlock_at"],
                     directory_path=assignment["name"],
                     is_published=assignment["published"],
-                    assignment_overrides=assignment["overrides"],
+                    assignment_overrides=overrides_collection,
                     max_attempts=max_attempts
                 )
         

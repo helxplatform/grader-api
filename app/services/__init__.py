@@ -10,3 +10,4 @@ from .appstore_service import *
 from .lms_sync_service import *
 from .cleanup_service import *
 from .grading_service import *
+from .assignment_override_service import *
