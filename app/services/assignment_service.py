@@ -40,7 +40,7 @@ class AssignmentService:
         available_date: datetime | None,
         due_date: datetime | None,
         is_published: bool,
-        assignment_overrides: list | None
+        assignment_override: list | None
     ) -> AssignmentModel:
         from app.services import GiteaService, FileOperation, FileOperationType, CourseService
 
@@ -49,8 +49,6 @@ class AssignmentService:
 
         gitea_service = GiteaService(self.session)
         course_service = CourseService(self.session)
-
-        #override = AssignmentOverrideModel(id)
 
         assignment = AssignmentModel(
             id=id,

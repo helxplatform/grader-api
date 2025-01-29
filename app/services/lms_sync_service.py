@@ -81,21 +81,22 @@ class LmsSyncService:
 
             except AssignmentNotFoundException as e:
                 # create assignment overrides
-                overrides_collection = []
+                overrides_collection = [None]
                 if assignment["has_overrides"]:
                     overrides_collection = await self.assignment_override_service.create_assignment_override(assignment["overrides"])
 
                 #create a new assignment
-                await self.assignment_service.create_assignment(
-                    id=assignment["id"],
-                    name=assignment["name"], 
-                    due_date=assignment["due_at"], 
-                    available_date=assignment["unlock_at"],
-                    directory_path=assignment["name"],
-                    is_published=assignment["published"],
-                    assignment_overrides=overrides_collection,
-                    max_attempts=max_attempts
-                )
+                for override in overrides_collection:
+                    await self.assignment_service.create_assignment(
+                        id=assignment["id"],
+                        name=assignment["name"], 
+                        due_date=assignment["due_at"], 
+                        available_date=assignment["unlock_at"],
+                        directory_path=assignment["name"],
+                        is_published=assignment["published"],
+                        assignment_overrides=override,
+                        max_attempts=max_attempts
+                    )
         
         return canvas_assignments
 
