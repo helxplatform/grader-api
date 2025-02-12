@@ -1,17 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app.models import AssignmentModel, AssignmentOverrideModel, CourseModel, StudentModel
-# from app.schemas import (
-#     AssignmentSchema,
-#     InstructorAssignmentSchema,
-#     StudentAssignmentSchema,
-#     UpdateAssignmentSchema,
-#     AssignmentOverrideSchema,
-#     StudentSchema,
-#     CourseSchema
-# )
+from app.models import AssignmentOverrideModel
 from app.enums.assignment_status import AssignmentStatus
-from app.services.submission_service import SubmissionService
 
 class AssignmentOverrideService:
     def __init__(self, session: Session):

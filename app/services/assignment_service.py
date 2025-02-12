@@ -177,17 +177,6 @@ class AssignmentService:
             raise AssignmentNotFoundException()
         return assignment
     
-    async def get_assignment_for_student_by_id(self, student_id: int, assignment_id: int) -> AssignmentModel:
-        assignment = self.session.query(AssignmentModel) \
-            .filter_by(id=assignment_id) \
-            .first()
-        if assignment is None:
-            raise AssignmentNotFoundException()
-        
-        if assignment
-
-        return assignment
-    
     async def update_assignment(
             self, 
             assignment: AssignmentModel, 
