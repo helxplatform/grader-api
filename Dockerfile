@@ -4,7 +4,11 @@ FROM python:3.11.9
 # Set the working directory in the container to /app
 WORKDIR /app
 
+# Update 
 RUN apt-get update && apt-get install -y rsync
+
+# Fix vulnerabilities with old packages
+RUN apt-get upgrade -y libaom3 git libexpat openexr zlib
 
 # Add the current directory contents into the container at /app
 ADD . .
