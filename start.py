@@ -5,8 +5,8 @@ import asyncio
 from dotenv import load_dotenv
 from alembic.config import Config
 from alembic import command
-from app.services import LmsSyncService
-from app.database import SessionLocal
+from src.services import LmsSyncService
+from src.database import SessionLocal
 
 
 def positive_int(value):
@@ -25,7 +25,7 @@ def main(host: str, port: int, reload: bool, workers: int | None=None):
     secret_path = "/etc/grader-secret"
 
     # Path where .env file will be created
-    env_path = "/app/.env"
+    env_path = "/src/.env"
 
     # Check if running in Kubernetes
     if os.path.isdir(config_path) or os.path.isdir(secret_path):

@@ -5,3 +5,17 @@
 .vscode
 .github
 **/__pycache__
+.poetry
+activate
+base-image/
+host/
+app/resources/
+Makefile
+make-config.env
+mk_passwd.py
+requirements.txt
+.DS_Store
+.git
+.gitignore
+start-postgres-local.sh
+docker-compose.yaml

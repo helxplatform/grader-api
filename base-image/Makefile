@@ -35,6 +35,7 @@ build: ## Build the image.
 	    docker build --pull \
 		--build-arg BASE_IMAGE=${BASE_IMAGE} \
 		--build-arg BASE_IMAGE_TAG=${BASE_IMAGE_TAG} \
+		--build-arg POETRY_VERSION=${POETRY_VERSION} \
 		--platform=linux/amd64 \
 		-t ${APP_NAME} .
 
@@ -42,6 +43,7 @@ build-nc: ## Build the image without caching.
 	    docker build --pull --no-cache \
 		--build-arg BASE_IMAGE=${BASE_IMAGE} \
 		--build-arg BASE_IMAGE_TAG=${BASE_IMAGE_TAG} \
+		--build-arg POETRY_VERSION=${POETRY_VERSION} \
 		--platform=linux/amd64 \
 		-t ${APP_NAME} .
 
@@ -49,6 +51,7 @@ build-keep-logs: ## Build the image.
 	    docker build --pull \
 		--build-arg BASE_IMAGE=${BASE_IMAGE} \
 		--build-arg BASE_IMAGE_TAG=${BASE_IMAGE_TAG} \
+		--build-arg POETRY_VERSION=${POETRY_VERSION} \
 		--platform=linux/amd64 \
 		--progress=plain \
 		-t ${APP_NAME} .
@@ -56,7 +59,8 @@ build-keep-logs: ## Build the image.
 run: ## Run container on port configured in `config.env`
 	mkdir -p ./host
 	docker run -i -t --rm --env-file=./make-config.env -u $(UID):$(GID) \
-	  -p=$(FORWARDING_PORT):$(CONTAINER_PORT) \
+	  -v $(PWD)/host:/host -p=$(FORWARDING_PORT):$(CONTAINER_PORT) \
+	  $(DOCKER_GROUP_ADD_ARG) \
 	  --name="$(APP_NAME)" $(APP_NAME) $(ENTRYPOINT)
 
 up: build run ## Run container on port configured in `config.env` (Alias to run)

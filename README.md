@@ -42,7 +42,7 @@ When running in Kubernetes, we assume that a ConfigMap and a Secret are mounted
 at `/etc/grader-config` and `/etc/grader-secret` respectively. These contain the
 non-sensitive and sensitive configuration parameters for our application.
 The `start.py` script will combine the values from these two sources into a
-single `.env` file at `/app/.env`, which is then used by our application for its
+single `.env` file at `/src/.env`, which is then used by our application for its
 configuration.
 
 When running in Docker, we expect the `.env` file to be provided directly.
