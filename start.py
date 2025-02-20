@@ -1,12 +1,14 @@
-import os
-import glob
-import uvicorn
 import asyncio
+import glob
+import os
+
+import uvicorn
 from dotenv import load_dotenv
-from alembic.config import Config
+
 from alembic import command
-from src.services import LmsSyncService
+from alembic.config import Config
 from src.database import SessionLocal
+from src.services import LmsSyncService
 
 
 def positive_int(value):
@@ -25,7 +27,7 @@ def main(host: str, port: int, reload: bool, workers: int | None=None):
     secret_path = "/etc/grader-secret"
 
     # Path where .env file will be created
-    env_path = "/src/.env"
+    env_path = "/app/.env"
 
     # Check if running in Kubernetes
     if os.path.isdir(config_path) or os.path.isdir(secret_path):
@@ -59,7 +61,7 @@ def main(host: str, port: int, reload: bool, workers: int | None=None):
         print(str(e))
 
     # Start the application
-    uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers, log_config=None)
+    uvicorn.run("src.main:app", host=host, port=port, reload=reload, workers=workers, log_config=None)
 
 
 if __name__ == "__main__":

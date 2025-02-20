@@ -54,8 +54,8 @@ build-keep-logs: ## Build the image.
 		-t ${APP_NAME} .
 
 run: ## Run container on port configured in `config.env`
-	mkdir -p ./host
 	docker run -i -t --rm --env-file=./make-config.env -u $(UID):$(GID) \
+		--platform=linux/amd64 \
 	  -p=$(FORWARDING_PORT):$(CONTAINER_PORT) \
 	  --name="$(APP_NAME)" $(APP_NAME) $(ENTRYPOINT)
 
@@ -68,8 +68,6 @@ release: build-nc publish ## Make a release by building and publishing tagged co
 
 # Docker publish
 publish: publish-latest publish-version ## Publish tags
-	@echo 'publish all tags to $(IMAGE_REPO)'
-	docker push -a $(IMAGE_REPO)/$(APP_NAME)
 
 publish-latest: tag-latest ## Publish the `latest` tagged container to ECR
 	@echo 'publish latest to $(IMAGE_REPO)'
