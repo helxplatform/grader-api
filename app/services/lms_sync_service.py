@@ -80,23 +80,20 @@ class LmsSyncService:
                 ))
 
             except AssignmentNotFoundException as e:
-                # create assignment overrides
-                overrides_collection = [None]
-                if assignment["has_overrides"]:
-                    overrides_collection = await self.assignment_override_service.create_assignment_override(assignment["overrides"])
+                await self.assignment_service.create_assignment(
+                    id=assignment["id"],
+                    name=assignment["name"], 
+                    due_date=assignment["due_at"], 
+                    available_date=assignment["unlock_at"],
+                    directory_path=assignment["name"],
+                    is_published=assignment["published"],
+                    max_attempts=max_attempts
+                )
 
-                #create a new assignment
-                for override in overrides_collection:
-                    await self.assignment_service.create_assignment(
-                        id=assignment["id"],
-                        name=assignment["name"], 
-                        due_date=assignment["due_at"], 
-                        available_date=assignment["unlock_at"],
-                        directory_path=assignment["name"],
-                        is_published=assignment["published"],
-                        assignment_overrides=override,
-                        max_attempts=max_attempts
-                    )
+                # create assignment overrides
+                if assignment["has_overrides"]:
+                    await self.assignment_override_service.create_assignment_override(assignment["overrides"])
+
         
         return canvas_assignments
 
@@ -201,7 +198,7 @@ class LmsSyncService:
                 await self.canvas_service.associate_pid_to_user(user_info.onyen, pid)
 
         return canvas_instructors
-    
+
     async def upsync_submission(
         self,
         submission: SubmissionModel,
@@ -259,7 +256,7 @@ class LmsSyncService:
     async def downsync(self):
         print("Syncing the LMS with the database")
         await self.sync_course()
-        await self.sync_assignments()
         await self.sync_students()
+        await self.sync_assignments()
         await self.sync_instructors()
         print("Syncing complete")

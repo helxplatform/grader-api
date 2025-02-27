@@ -39,8 +39,7 @@ class AssignmentService:
         max_attempts: PositiveInt | None,
         available_date: datetime | None,
         due_date: datetime | None,
-        is_published: bool,
-        assignment_override: list | None
+        is_published: bool
     ) -> AssignmentModel:
         from app.services import GiteaService, FileOperation, FileOperationType, CourseService
 
@@ -59,8 +58,7 @@ class AssignmentService:
             max_attempts=max_attempts,
             available_date=available_date,
             due_date=due_date,
-            is_published=is_published,
-            assignment_override=assignment_override
+            is_published=is_published
         )
 
         self.session.add(assignment)

@@ -47,7 +47,7 @@ class LogMiddleware(BaseHTTPMiddleware):
         except:
             resp_body = str(resp_body)
 
-        if "error_code" in resp_body:
+        if type(resp_body) is not None or "error_code" in resp_body:
             # If the response contains an error code, that means an exception happened
             # and we need to log it. So just log the exception and return, don't log
             # the request as you would normally.

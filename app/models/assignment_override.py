@@ -25,5 +25,5 @@ class AssignmentOverrideModel(Base):
     assignment = relationship(
         "AssignmentModel",
         foreign_keys="AssignmentOverrideModel.assignment_id",
-        backref=backref("assignment_overrides")
+        back_populates="assignment_overrides"
     )
