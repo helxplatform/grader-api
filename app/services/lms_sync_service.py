@@ -64,6 +64,7 @@ class LmsSyncService:
             if assignment.id not in [a['id'] for a in canvas_assignments]:
                 await self.assignment_service.delete_assignment(assignment)
 
+        # Update assignments that are already in the database
         for assignment in canvas_assignments:
             # Canvas uses -1 for unlimited attempts.
             max_attempts = assignment["allowed_attempts"] if assignment["allowed_attempts"] >= 0 else None
@@ -75,9 +76,21 @@ class LmsSyncService:
                     available_date=assignment["unlock_at"],
                     due_date=assignment["due_at"],
                     is_published=assignment["published"],
-                    assignment_overrides=assignment["overrides"],
                     max_attempts=max_attempts
                 ))
+
+                # Update assignment override if they exist for this assignment in the DB, otherwise create them
+                if(assignment["has_overrides"]):
+                    for canvas_override in assignment["overrides"]:
+                        for student_id in canvas_override["student_ids"]:
+                            try:
+                                db_override = await self.assignment_override_service.get_assignment_override_by_student(
+                                    assignment_id=assignment["id"],
+                                    student_id=student_id
+                                )
+                                await self.assignment_override_service.update_assignment_override(db_override, canvas_override)
+                            except AssignmentNotFoundException as e:
+                                await self.assignment_override_service.create_assignment_override(canvas_override, student_id)
 
             except AssignmentNotFoundException as e:
                 await self.assignment_service.create_assignment(
@@ -90,9 +103,10 @@ class LmsSyncService:
                     max_attempts=max_attempts
                 )
 
-                # create assignment overrides
-                if assignment["has_overrides"]:
-                    await self.assignment_override_service.create_assignment_override(assignment["overrides"])
+                if(assignment["has_overrides"]):
+                    for canvas_override in assignment["overrides"]:
+                        for student_id in canvas_override["student_ids"]:
+                            await self.assignment_override_service.create_assignment_override(canvas_override, student_id)
 
         
         return canvas_assignments

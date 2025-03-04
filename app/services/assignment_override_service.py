@@ -9,26 +9,49 @@ class AssignmentOverrideService:
 
     async def create_assignment_override(
         self,
-        overrides: dict | None
+        override: dict | None,
+        student_id: int
     ) -> AssignmentOverrideModel:
 
-        override_collections = []
 
-        for override in overrides:
-            for student_id in override["student_ids"]:
+        assignment_override = AssignmentOverrideModel(
+            id=override["id"],
+            student_id=student_id,
+            assignment_id=override["assignment_id"],
+            available_date=override["unlock_at"],
+            due_date=override["due_at"]
+        )
 
-                assignment_override = AssignmentOverrideModel(
-                    id=override["id"],
-                    student_id=student_id,
-                    assignment_id=override["assignment_id"],
-                    available_date=override["unlock_at"],
-                    due_date=override["due_at"]
-                )
+        self.session.add(assignment_override)
+        self.session.commit()
 
-                self.session.add(assignment_override)
-                self.session.commit()
-
-                override_collections.append(assignment_override)
-
-        return override_collections
+        return assignment_override
+    
+    async def get_assignment_overrides_by_id(
+        self,
+        override_id: int
+    ) -> list[AssignmentOverrideModel]:
+        return self.session.query(AssignmentOverrideModel) \
+            .filter_by(id=override_id) \
+            .all()
+    
+    async def get_assignment_override_by_student(
+        self,
+        assignment_id: int,
+        student_id: int
+    ) -> AssignmentOverrideModel:
+        return self.session.query(AssignmentOverrideModel) \
+            .filter_by(assignment_id=assignment_id) \
+            .filter_by(student_id=student_id) \
+            .first()
+    
+    async def update_assignment_override(
+        self,
+        db_override: AssignmentOverrideModel,
+        canvas_override: dict
+    ) -> AssignmentOverrideModel:
+        db_override.available_date = canvas_override["unlock_at"]
+        db_override.due_date = canvas_override["due_at"]
+        self.session.commit()
+        return db_override
        
