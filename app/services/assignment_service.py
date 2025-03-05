@@ -24,6 +24,7 @@ from app.core.exceptions import (
     AssignmentDueBeforeOpenException,
     SubmissionMaxAttemptsReachedException
 )
+from app.services.assignment_override_service import AssignmentOverrideService
 from app.enums.assignment_status import AssignmentStatus
 from app.services.submission_service import SubmissionService
 
@@ -362,30 +363,23 @@ class StudentAssignmentService(AssignmentService):
             .first()
         return extra_time_model
 
-    # The release date for a specific student, considering extra_time
+    # The release date for a specific student, considering assignment override for this student
     def get_adjusted_available_date(self) -> datetime | None:
-        assignment_open_date = self.assignment_model.available_date or self.course_model.start_at
-        if assignment_open_date is None: return None
-        deferred_time = self.extra_time_model.deferred_time if self.extra_time_model is not None else timedelta(0)
-        
-        return assignment_open_date + deferred_time
+        assignment_override = AssignmentOverrideService.get_assignment_override_by_student(self.assignment_model.id, self.student_model.id)
+        assignment_open_date = assignment_override.available_date or self.assignment_model.available_date or self.course_model.start_at
 
-    # The due date for a specific student, considering extra_time
+        if assignment_open_date is None: return None
+        
+        return assignment_open_date
+
+    # The due date for a specific student, considering assignment override for this student
     def get_adjusted_due_date(self) -> datetime | None:
-        assignment_due_date = self.assignment_model.due_date or self.course_model.end_at
+        assignment_override = AssignmentOverrideService.get_assignment_override_by_student(self.assignment_model.id, self.student_model.id)
+        assignment_due_date = assignment_override.due_date or self.assignment_model.due_date or self.course_model.end_at
+
         if assignment_due_date is None: return None
 
-        # If a student does not have any extra time allotted for the assignment,
-        # allocate them a timedelta of 0.
-        if self.extra_time_model is not None:
-            deferred_time = self.extra_time_model.deferred_time
-            extra_time = self.extra_time_model.extra_time
-        else:
-            deferred_time = timedelta(0)
-            extra_time = timedelta(0)
-
-        # Base due date + have to defer by whatever amount the available date was deferred by + extra time + base extra time
-        return assignment_due_date + deferred_time + extra_time + self.student_model.base_extra_time
+        return assignment_due_date
 
     def _get_is_available(self) -> bool:
         adjusted_available_date = self.get_adjusted_available_date()
