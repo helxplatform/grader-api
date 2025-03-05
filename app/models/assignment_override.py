@@ -19,11 +19,9 @@ class AssignmentOverrideModel(Base):
 
     student = relationship(
         "StudentModel",
-        foreign_keys="AssignmentOverrideModel.student_id",
-        back_populates="assignment_overrides"
+        foreign_keys="AssignmentOverrideModel.student_id"
     )
     assignment = relationship(
         "AssignmentModel",
-        foreign_keys="AssignmentOverrideModel.assignment_id",
-        back_populates="assignment_overrides"
+        foreign_keys="AssignmentOverrideModel.assignment_id"
     )
