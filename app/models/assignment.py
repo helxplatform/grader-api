@@ -26,8 +26,6 @@ class AssignmentModel(Base):
     is_published = Column(Boolean, server_default='f', nullable=False)
     manual_grading = Column(Boolean, server_default='f', nullable=False)
     assignment_overrides = relationship("AssignmentOverrideModel", cascade="all, delete-orphan", back_populates="assignment")
-    AssignmentModel = relationship("SubmissionModel", cascade="all,delete", back_populates="assignment")
-
 
 
     @hybrid_property

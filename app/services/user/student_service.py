@@ -1,6 +1,6 @@
 from typing import List
 from app.events import dispatch
-from app.models import StudentModel, UserModel
+from app.models import StudentModel
 from app.events import CreateUserCrudEvent
 from app.core.role_permissions import student_role
 from app.core.exceptions import NotAStudentException, UserAlreadyExistsException, UserNotFoundException
@@ -100,6 +100,7 @@ class StudentService(UserService):
         user = await super().get_user_by_id(id)
         if not isinstance(user, StudentModel):
             raise NotAStudentException()
+        return user
     
     async def set_fork_cloned(self, student: StudentModel) -> None:
         student.fork_cloned = True

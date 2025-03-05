@@ -28,12 +28,6 @@ class UserService:
         if user is None:
             raise UserNotFoundException()
         return user
-    
-    async def get_user_by_id(self, id: int) -> UserModel:
-        user = self.session.query(UserModel).filter_by(id=id).first()
-        if user is None:
-            raise UserNotFoundException()
-        return user
 
     async def get_user_by_email(self, email: str) -> UserModel:
         user = self.session.query(UserModel).filter_by(email=email).first()
