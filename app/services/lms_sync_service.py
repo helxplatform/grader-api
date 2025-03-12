@@ -84,13 +84,17 @@ class LmsSyncService:
                     for canvas_override in assignment["overrides"]:
                         for student_id in canvas_override["student_ids"]:
                             try:
-                                db_override = await self.assignment_override_service.get_assignment_override_by_student(
+                                db_override = await self.assignment_override_service.get_assignment_override_by_student_id(
                                     assignment_id=assignment["id"],
                                     student_id=student_id
                                 )
                                 await self.assignment_override_service.update_assignment_override(db_override, canvas_override)
-                            except AssignmentNotFoundException as e:
+                            except:
                                 await self.assignment_override_service.create_assignment_override(canvas_override, student_id)
+                else:
+                    # Delete assignment overrides if they exist for this assignment in the DB
+                    for db_override in await self.assignment_override_service.get_assignment_overrides_by_id(assignment["id"]):
+                        await self.assignment_override_service.delete_assignment_override(db_override)
 
             except AssignmentNotFoundException as e:
                 await self.assignment_service.create_assignment(

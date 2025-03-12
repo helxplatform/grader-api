@@ -27,6 +27,11 @@ class AssignmentOverrideService:
 
         return assignment_override
     
+    async def get_assignment_overrides(
+        self
+    ) -> list[AssignmentOverrideModel]:
+        return self.session.query(AssignmentOverrideModel).all()
+    
     async def get_assignment_overrides_by_id(
         self,
         override_id: int
@@ -35,7 +40,15 @@ class AssignmentOverrideService:
             .filter_by(id=override_id) \
             .all()
     
-    async def get_assignment_override_by_student(
+    async def get_assignment_overrides_by_assignment_id(
+        self,
+        assignment_id: int
+    ) -> list[AssignmentOverrideModel]:
+        return self.session.query(AssignmentOverrideModel) \
+            .filter_by(assignment_id=assignment_id) \
+            .all()
+    
+    async def get_assignment_override_by_student_id(
         self,
         assignment_id: int,
         student_id: int
@@ -54,4 +67,11 @@ class AssignmentOverrideService:
         db_override.due_date = canvas_override["due_at"]
         self.session.commit()
         return db_override
-       
+    
+
+    async def delete_assignment_override(
+        self,
+        student_override: AssignmentOverrideModel
+    ) -> None:
+        self.session.delete(student_override)
+        self.session.commit()
