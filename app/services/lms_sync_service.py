@@ -79,7 +79,8 @@ class LmsSyncService:
                     max_attempts=max_attempts
                 ))
 
-                # Update assignment override if they exist for this assignment in the DB, otherwise create them
+                # Update assignment override if they exist for this assignment in the DB, 
+                # Otherwise create them for new students added to the override
                 if(assignment["has_overrides"]):
                     for canvas_override in assignment["overrides"]:
                         for student_id in canvas_override["student_ids"]:
@@ -92,10 +93,12 @@ class LmsSyncService:
                             except:
                                 await self.assignment_override_service.create_assignment_override(canvas_override, student_id)
                 else:
-                    # Delete assignment overrides if they exist for this assignment in the DB
-                    for db_override in await self.assignment_override_service.get_assignment_overrides_by_id(assignment["id"]):
-                        await self.assignment_override_service.delete_assignment_override(db_override)
+                    # Delete assignment overrides if they exist for this assignment in the DB, but do not exist in Canvas
+                    for db_override in await self.assignment_override_service.get_assignment_overrides_by_assignment_id(assignment["id"]):
+                        for student_override in db_override:
+                            await self.assignment_override_service.delete_assignment_override(student_override)
 
+            # Assignment does not exist in the database, create it
             except AssignmentNotFoundException as e:
                 await self.assignment_service.create_assignment(
                     id=assignment["id"],
@@ -107,6 +110,7 @@ class LmsSyncService:
                     max_attempts=max_attempts
                 )
 
+                # Create assignment overrides if the new assignment has one
                 if(assignment["has_overrides"]):
                     for canvas_override in assignment["overrides"]:
                         for student_id in canvas_override["student_ids"]:
