@@ -353,6 +353,7 @@ class StudentAssignmentService(AssignmentService):
         self.assignment_model = assignment_model
         self.course_model = course_model
         self.extra_time_model = self._get_extra_time_model()
+        self.assignment_override_service = AssignmentOverrideService(session)
 
     def _get_extra_time_model(self) -> ExtraTimeModel | None:
         extra_time_model = self.session.query(ExtraTimeModel) \
@@ -364,19 +365,19 @@ class StudentAssignmentService(AssignmentService):
         return extra_time_model
 
     # The release date for a specific student, considering assignment override for this student
-    def get_adjusted_available_date(self) -> datetime | None:
-        assignment_override = AssignmentOverrideService.get_assignment_override_by_student(self.assignment_model.id, self.student_model.id)
-        assignment_open_date = assignment_override.available_date or self.assignment_model.available_date or self.course_model.start_at
+    async def get_adjusted_available_date(self) -> datetime | None:
+        assignment_override = await self.assignment_override_service.get_assignment_override_by_student_id(self.assignment_model.id, self.student_model.id)
 
+        assignment_open_date = (assignment_override.available_date if assignment_override else None) or self.assignment_model.available_date or self.course_model.start_at
         if assignment_open_date is None: return None
         
         return assignment_open_date
 
     # The due date for a specific student, considering assignment override for this student
-    def get_adjusted_due_date(self) -> datetime | None:
-        assignment_override = AssignmentOverrideService.get_assignment_override_by_student(self.assignment_model.id, self.student_model.id)
-        assignment_due_date = assignment_override.due_date or self.assignment_model.due_date or self.course_model.end_at
-
+    async def get_adjusted_due_date(self) -> datetime | None:
+        assignment_override = await self.assignment_override_service.get_assignment_override_by_student_id(self.assignment_model.id, self.student_model.id)
+        
+        assignment_due_date = (assignment_override.due_date if assignment_override else None) or self.assignment_model.due_date or self.course_model.end_at
         if assignment_due_date is None: return None
 
         return assignment_due_date
@@ -394,12 +395,12 @@ class StudentAssignmentService(AssignmentService):
         current_timestamp = self.session.scalar(func.current_timestamp())
         return current_timestamp > adjusted_due_date
     
-    def get_assignment_status(self) -> AssignmentStatus:
+    async def get_assignment_status(self) -> AssignmentStatus:
         if not self.assignment_model.is_published: return AssignmentStatus.UNPUBLISHED
 
         current_timestamp = self.session.scalar(func.current_timestamp())
-        adjusted_available_date = self.get_adjusted_available_date()
-        adjusted_due_date = self.get_adjusted_due_date()
+        adjusted_available_date = await self.get_adjusted_available_date()
+        adjusted_due_date = await self.get_adjusted_due_date()
 
         # Until a course is properly configured (has start_at,end_at dates),
         # all published assignments will display as upcoming. 
@@ -412,7 +413,7 @@ class StudentAssignmentService(AssignmentService):
         else: return AssignmentStatus.CLOSED
 
     async def validate_student_can_submit(self):
-        assignment_status = self.get_assignment_status()
+        assignment_status = await self.get_assignment_status()
         if assignment_status == AssignmentStatus.UNPUBLISHED:
             raise AssignmentNotPublishedException()
 
@@ -429,7 +430,7 @@ class StudentAssignmentService(AssignmentService):
 
     async def get_student_assignment_schema(self) -> StudentAssignmentSchema:
         assignment = AssignmentSchema.from_orm(self.assignment_model).dict()
-        assignment_status = self.get_assignment_status()
+        assignment_status = await self.get_assignment_status()
 
         assignment["protected_files"] = await self.get_protected_files(self.assignment_model)
         assignment["overwritable_files"] = await self.get_overwritable_files(self.assignment_model)
@@ -438,8 +439,8 @@ class StudentAssignmentService(AssignmentService):
             self.assignment_model
         )
         assignment["status"] = assignment_status.value
-        assignment["adjusted_available_date"] = self.get_adjusted_available_date()
-        assignment["adjusted_due_date"] = self.get_adjusted_due_date()
+        assignment["adjusted_available_date"] = await self.get_adjusted_available_date()
+        assignment["adjusted_due_date"] = await self.get_adjusted_due_date()
         assignment["is_available"] = assignment_status == AssignmentStatus.OPEN
         assignment["is_closed"] = assignment_status == AssignmentStatus.CLOSED
         assignment["is_published"] = assignment_status != AssignmentStatus.UNPUBLISHED
