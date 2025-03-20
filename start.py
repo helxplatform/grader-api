@@ -1,12 +1,14 @@
-import os
-import glob
-import uvicorn
 import asyncio
+import glob
+import os
+
+import uvicorn
 from dotenv import load_dotenv
-from alembic.config import Config
+
 from alembic import command
-from app.services import LmsSyncService
-from app.database import SessionLocal
+from alembic.config import Config
+from src.database import SessionLocal
+from src.services import LmsSyncService
 
 
 def positive_int(value):
@@ -59,7 +61,7 @@ def main(host: str, port: int, reload: bool, workers: int | None=None):
         print(str(e))
 
     # Start the application
-    uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers, log_config=None)
+    uvicorn.run("src.main:app", host=host, port=port, reload=reload, workers=workers, log_config=None)
 
 
 if __name__ == "__main__":
