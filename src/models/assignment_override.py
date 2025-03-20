@@ -4,7 +4,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.orm import relationship, backref
-from app.database import Base
+from src.database import Base
 
 class AssignmentOverrideModel(Base):
     __tablename__ = "assignment_override"
