@@ -1,8 +1,6 @@
 from datetime import datetime, timedelta, date
-import json
 import unittest
 from unittest.mock import MagicMock, patch
-from sqlalchemy.orm import Session
 from app.services import AssignmentService
 from app.models import AssignmentModel
 from app.schemas import UpdateAssignmentSchema
