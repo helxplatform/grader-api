@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings, DevPhase
 from app.core.exceptions import (
     SubmissionNotFoundException, OtterConfigViolationException, AutogradingDisabledException,
-    StudentGradedMultipleTimesException, SubmissionMismatchException
+    StudentGradedMultipleTimesException, SubmissionMismatchException, AssignmentNotebookRevisionNotSelectedException
 )
 from app.core.utils.datetime import get_now_with_tzinfo
 from app.services import StudentService, SubmissionService, CourseService, GiteaService
@@ -45,6 +45,22 @@ class GradingService:
                 pass
             
         return submissions
+
+    async def get_active_submissions(self, assignment: AssignmentModel) -> list[SubmissionModel]:
+        if assignment.active_master_notebook_revision is None:
+            raise AssignmentNotebookRevisionNotSelectedException()
+        
+        students = await StudentService(self.session).list_students()
+        submissions = []
+        for student in students:
+            try:
+                active_submission = await SubmissionService(self.session).get_active_submission(student, assignment)
+            except SubmissionNotFoundException:
+                # No submission made by the student for this revision of the assignment
+                pass
+        
+        return submissions
+        
 
     async def get_student_notebook_upload(self, submission: SubmissionModel, student_notebook_content: bytes) -> BinaryIO:
         attempt = await SubmissionService(self.session).get_current_submission_attempt(submission.student, submission.assignment)

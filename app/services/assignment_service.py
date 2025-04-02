@@ -18,6 +18,9 @@ from app.core.exceptions import (
     AssignmentNotOpenException,
     AssignmentClosedException,
     AssignmentDueBeforeOpenException,
+    AssignmentNotebookRevisionNotFoundException,
+    AssignmentNotebookRevisionNotSelectedException,
+    AssignmentNotebookRevisionCommittedException,
     SubmissionMaxAttemptsReachedException
 )
 from app.enums.assignment_status import AssignmentStatus
@@ -50,11 +53,11 @@ class AssignmentService:
             name=name,
             directory_path=directory_path,
             # This is relative to directory_path
-            master_notebook_path=f"{ name }.ipynb",
             max_attempts=max_attempts,
             available_date=available_date,
             due_date=due_date,
-            is_published=is_published
+            is_published=is_published,
+            master_notebook_revision_id=None
         )
 
         self.session.add(assignment)
@@ -182,6 +185,7 @@ class AssignmentService:
             student_id: int | None = None
     ) -> AssignmentModel:
         from app.services.lms_sync_service import LmsSyncService
+        from app.services.master_notebook_revision_service import MasterNotebookRevisionService
 
         update_fields = update_assignment.dict(exclude_unset=True)
         
@@ -190,9 +194,6 @@ class AssignmentService:
 
         if "directory_path" in update_fields:
             assignment.directory_path = update_fields["directory_path"]
-
-        if "master_notebook_path" in update_fields:
-            assignment.master_notebook_path = update_fields["master_notebook_path"]
 
         if "grader_question_feedback" in update_fields:
             assignment.grader_question_feedback = update_fields["grader_question_feedback"]
@@ -218,11 +219,52 @@ class AssignmentService:
 
         if assignment.available_date is not None and assignment.due_date is not None and assignment.available_date >= assignment.due_date:
             raise AssignmentDueBeforeOpenException()
+        
+        if "master_notebook_revision" in update_fields:
+            notebook_service = MasterNotebookRevisionService(self.session)
+            new_master_notebook_path = update_fields["master_notebook_revision"]["master_notebook_path"]
+            new_master_notebook_content = update_fields["master_notebook_revision"]["master_notebook_content"]
 
-        # There's no reason to commit and emit a superfluous CRUD event
+            try:
+                # An existing revision with this path exists (the path of a notebook revision is uniquely identifying).
+                notebook_revision = await notebook_service.get_assignment_revision_by_path(
+                    assignment,
+                    new_master_notebook_path
+                )
+                """ Summary: We should not permit the contents of the master notebook to update once the student version has been committed.
+
+                The master notebook is untracked and thus won't hit a merge policy violation since it is never actually committed.
+                This can give the impression that it can be updated locally by the professor, but they will ultimately hit a pre-receive abort
+                on their commit when they actually try to push it through, since the re-generated student version is tracked and will violate this policy.
+                
+                The implication here is that since the student version cannot be modified once committed, neither can the master version.
+                Otherwise, it may permit a situation where the professor locally updates the contents of their master notebook (without actually
+                committing, because they can't) resulting in a discrepancy between the actual student version and our notion of the "new" master version.
+                Essentially, this is just a safeguard to prevent misuse/misunderstanding.
+                """
+                notebook_revision_already_committed = await notebook_service.get_revision_is_committed(assignment, notebook_revision)
+                if notebook_revision_already_committed:
+                    raise AssignmentNotebookRevisionCommittedException
+                # As long as the notebook is still uncommitted (i.e., the professor is still actively creating it and has not
+                # pushed the gradeable version to their students), it is fine to permit updates to its contents.
+                notebook_revision.master_notebook_content = new_master_notebook_content
+
+            except AssignmentNotebookRevisionNotFoundException:
+                # If a revision with the specified path doesn't exist yet, create it for the professor.
+                notebook_revision = await notebook_service.create_assignment_revision(
+                    assignment,
+                    new_master_notebook_path,
+                    new_master_notebook_content
+                )
+
+            assignment.master_notebook_revision_id = notebook_revision.id
+
+        assignment_did_update = self.session.is_modified(assignment)
+        self.session.commit()
+
+        # There's no reason to emit a superfluous CRUD event
         # if no changes were actually done to the assignment's existing values
-        if self.session.is_modified(assignment):
-            self.session.commit()
+        if assignment_did_update:
             try:
                 await event_emitter.emit_async(
                     AssignmentCrudEvent(
@@ -286,7 +328,8 @@ __pycache__/
             "prof-scripts"
         ]
         # In a manually graded assignment, the notebook is shared among all users.
-        if not assignment.manual_grading: files.append(assignment.master_notebook_path)
+        if not assignment.manual_grading:
+            files += [notebook_revision.master_notebook_path for notebook_revision in assignment.master_notebook_revisions]
         
         return files
     
@@ -439,9 +482,15 @@ class StudentAssignmentService(AssignmentService):
             raise AssignmentClosedException()
         
         if self.assignment_model.max_attempts is not None:
+            # NOTE: We do not count attempts relative to the current revision because it will still violate Canvas' data validation.
+            # Canvas has no notion of separate revisions of an assignment, so each submission will increment the attempt count on Canvas' end
+            # regardless of the revision of the assignment on our end.
             attempts = await SubmissionService(self.session).get_current_submission_attempt(self.student_model, self.assignment_model)
             if attempts >= self.assignment_model.max_attempts:
                 raise SubmissionMaxAttemptsReachedException()
+            
+        if self.assignment_model.master_notebook_revision_id is None:
+            raise AssignmentNotebookRevisionNotSelectedException()
 
     async def get_student_assignment_schema(self) -> StudentAssignmentSchema:
         assignment = AssignmentSchema.from_orm(self.assignment_model).dict()

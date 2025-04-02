@@ -2,6 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel, PositiveInt
 
 from app.enums.assignment_status import AssignmentStatus
+from .master_notebook_revision import MasterNotebookRevisionSchema, UpdateMasterNotebookRevisionSchema
 from ._unset import UNSET
 
 class AssignmentSchema(BaseModel):
@@ -10,9 +11,9 @@ class AssignmentSchema(BaseModel):
     directory_path: str
     # Relative to the assignment root (directory_path), i.e., the fully qualified path
     # of the file within the repo is `/{directory_path}/{master_notebook_path}`
-    master_notebook_path: str
+    master_notebook_path: str | None
     # Relative to the assignment root (directory_path)
-    student_notebook_path: str
+    student_notebook_path: str | None
     grader_question_feedback: bool
     max_attempts: PositiveInt | None
     created_date: datetime
@@ -28,13 +29,13 @@ class AssignmentSchema(BaseModel):
 class UpdateAssignmentSchema(BaseModel):
     name: str = UNSET
     directory_path: str = UNSET
-    master_notebook_path: str = UNSET
     grader_question_feedback: bool = UNSET
     max_attempts: PositiveInt | None
     available_date: datetime | None
     due_date: datetime | None
     is_published: bool = UNSET
     manual_grading: bool = UNSET
+    master_notebook_revision: UpdateMasterNotebookRevisionSchema = UNSET
 
 # Adds in fields relevant for JLP (tailored to the professor)
 class InstructorAssignmentSchema(AssignmentSchema):
@@ -42,6 +43,7 @@ class InstructorAssignmentSchema(AssignmentSchema):
     overwritable_files: list[str]
     # These are globs, not necessarily actual file paths.
     protected_files: list[str]
+    active_master_notebook_revision: MasterNotebookRevisionSchema
     
     is_available: bool
     is_closed: bool

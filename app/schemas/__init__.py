@@ -11,3 +11,4 @@ from .job import *
 from .websocket import *
 from .pubsub import *
 from .events import *
+from .master_notebook_revision import *
