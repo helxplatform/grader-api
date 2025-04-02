@@ -1,19 +1,20 @@
 import sys
 import logging
+import asyncio
 from logging.handlers import RotatingFileHandler
 from typing import List
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware import Middleware
 from fastapi_pagination import add_pagination
-from fastapi_events.middleware import EventHandlerASGIMiddleware
-from fastapi_events.handlers.local import local_handler
 from starlette.middleware.cors import CORSMiddleware
-
 from app.api.api_v1 import api_router
 from app.core.config import settings, DevPhase
 from app.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddleware
 from app.core.exceptions import CustomException
+from app.services import WebsocketManagerService
+from eduhelx_utils.custom_logger import CustomizeLogger
 
 
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -53,6 +54,17 @@ def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
 def init_listeners(app: FastAPI):
+    @app.on_event("startup")
+    async def startup():
+        """ Subscribe to the websockets PubSub channel and process published websocket events. """
+        app.state.pubsub_task = asyncio.create_task(WebsocketManagerService.receive_pubsub_ws_messages())
+
+    @app.on_event("shutdown")
+    async def shutdown():
+        """ Cancel the pubsub task on shutdown. This probably isn't necessary to be honest. """
+        if app.state.pubsub_task is not None:
+            app.state.pubsub_task.cancel()
+            
     # Errors go to the most specialized handler, so this will only pick up
     # non CustomException and non FastAPI/starlette errors (internal server errors)
     @app.exception_handler(Exception)
@@ -62,6 +74,7 @@ def init_listeners(app: FastAPI):
             status_code=500,
             content=content
         )
+            
     @app.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
         # Only log regular CustomException errors under debug
@@ -104,10 +117,6 @@ def make_middleware() -> List[Middleware]:
             AuthenticationMiddleware,
             backend=AuthBackend(),
             on_error=on_auth_error
-        ),
-        Middleware(
-            EventHandlerASGIMiddleware,
-            handlers=[local_handler]
         ),
         Middleware(
             LogMiddleware, 

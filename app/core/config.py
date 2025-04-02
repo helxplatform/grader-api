@@ -33,6 +33,18 @@ class Settings(BaseSettings):
     # Setup wizard (JSON-serialized string)
     SETUP_WIZARD_DATA: Optional[SetupWizardData] = None
 
+    # Job queue
+    BROKER_HOST: str
+    BROKER_PORT: int
+    BROKER_USER: str
+    BROKER_PASSWORD: str
+
+    CELERY_BROKER_URI: Optional[str] = None # computed
+    CELERY_RESULT_BACKEND_URI: Optional[str] = None # computed
+    # Techincally, we could use either of the above as the general database as well,
+    # but using a new database helps with organization
+    REDIS_GENERAL_DATABASE_URI: Optional[str] = None # computed
+
     # Gitea
     GITEA_SSH_URL: str
     GITEA_ASSIST_API_URL: str
@@ -82,17 +94,44 @@ class Settings(BaseSettings):
         return v
 
     @validator("STUDENT_APPSTORE_API_URL", pre=True)
-    def compute_student_appstore_api_url(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    def compute_student_appstore_api_url(cls, v: Optional[str], values: Dict[str, Any]) -> str:
         if isinstance(v, str): return v
         return values.get("STUDENT_APPSTORE_HOST") + "/api/v1"
 
     @validator("INSTRUCTOR_APPSTORE_API_URL", pre=True)
-    def compute_instructor_appstore_api_url(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    def compute_instructor_appstore_api_url(cls, v: Optional[str], values: Dict[str, Any]) -> str:
         if isinstance(v, str): return v
         return values.get("INSTRUCTOR_APPSTORE_HOST") + "/api/v1"
 
+    @validator("CELERY_BROKER_URI", pre=True)
+    def assemble_broker_uri(cls, v: Optional[str], values: Dict[str, Any]) -> str:
+        if isinstance(v, str): return v
+        user = values.get("BROKER_USER")
+        pw = values.get("BROKER_PASSWORD")
+        host = values.get("BROKER_HOST")
+        port = values.get("BROKER_PORT")
+        return f"redis://{ user }:{ pw }@{ host }:{ port }/0"
+    
+    @validator("CELERY_RESULT_BACKEND_URI", pre=True)
+    def assemble_result_backend_uri(cls, v: Optional[str], values: Dict[str, Any]) -> str:
+        if isinstance(v, str): return v
+        user = values.get("BROKER_USER")
+        pw = values.get("BROKER_PASSWORD")
+        host = values.get("BROKER_HOST")
+        port = values.get("BROKER_PORT")
+        return f"redis://{ user }:{ pw }@{ host }:{ port }/1"
+
+    @validator("REDIS_GENERAL_DATABASE_URI", pre=True)
+    def assemble_redis_general_connection_uri(cls, v: Optional[str], values: Dict[str, Any]) -> str:
+        if isinstance(v, str): return v
+        user = values.get("BROKER_USER")
+        pw = values.get("BROKER_PASSWORD")
+        host = values.get("BROKER_HOST")
+        port = values.get("BROKER_PORT")
+        return f"redis://{ user }:{ pw }@{ host }:{ port }/2"
+
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
+    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> str:
         if isinstance(v, str): return v
         return PostgresDsn.build(
             scheme="postgresql",

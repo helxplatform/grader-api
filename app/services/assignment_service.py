@@ -5,11 +5,13 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.exceptions.assignment import AssignmentCannotBeUnpublished
-from app.events import dispatch
+from app.events import event_emitter
 from app.models import AssignmentModel, InstructorModel, StudentModel, ExtraTimeModel
 from app.models.course import CourseModel
-from app.schemas import AssignmentSchema, InstructorAssignmentSchema, StudentAssignmentSchema, UpdateAssignmentSchema
-from app.events import CreateAssignmentCrudEvent, ModifyAssignmentCrudEvent, DeleteAssignmentCrudEvent
+from app.schemas import (
+    AssignmentSchema, InstructorAssignmentSchema, StudentAssignmentSchema, UpdateAssignmentSchema,
+    AssignmentCrudEvent, CrudType
+) 
 from app.core.exceptions import (
     AssignmentNotFoundException,
     AssignmentNotPublishedException,
@@ -115,7 +117,9 @@ class AssignmentService:
             self.session.commit()
             raise e
 
-        dispatch(CreateAssignmentCrudEvent(assignment=assignment))
+        try:
+            await event_emitter.emit_async(AssignmentCrudEvent(resource=assignment, crud_type=CrudType.CREATE))
+        except: pass
 
         return assignment
     
@@ -147,7 +151,9 @@ class AssignmentService:
         self.session.delete(assignment)
         self.session.commit()
 
-        dispatch(DeleteAssignmentCrudEvent(assignment=assignment))
+        try:
+            await event_emitter.emit_async(AssignmentCrudEvent(resource=assignment, crud_type=CrudType.DELETE))
+        except: pass
 
     async def get_assignment_by_id(self, id: int) -> AssignmentModel:
         assignment = self.session.query(AssignmentModel) \
@@ -213,9 +219,19 @@ class AssignmentService:
         if assignment.available_date is not None and assignment.due_date is not None and assignment.available_date >= assignment.due_date:
             raise AssignmentDueBeforeOpenException()
 
-        self.session.commit()
-
-        dispatch(ModifyAssignmentCrudEvent(assignment=assignment, modified_fields=list(update_fields.keys())))
+        # There's no reason to commit and emit a superfluous CRUD event
+        # if no changes were actually done to the assignment's existing values
+        if self.session.is_modified(assignment):
+            self.session.commit()
+            try:
+                await event_emitter.emit_async(
+                    AssignmentCrudEvent(
+                        resource=assignment,
+                        crud_type=CrudType.MODIFY,
+                        modified_fields=list(update_fields.keys())
+                    )
+                )
+            except: pass
 
         return assignment
     

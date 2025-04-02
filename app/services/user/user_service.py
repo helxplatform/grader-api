@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
-from app.events import dispatch
+from app.events import event_emitter
 from app.models import UserModel, AutoPasswordAuthModel
-from app.events import DeleteUserCrudEvent
-from app.schemas import RefreshTokenSchema
+from app.schemas import UserCrudEvent, CrudType, RefreshTokenSchema
 from app.core.config import settings
 from app.core.utils.token_helper import TokenHelper
 from app.core.utils.auth_helper import PasswordHelper
@@ -16,6 +15,9 @@ from app.core.exceptions import (
 class UserService:
     def __init__(self, session: Session):
         self.session = session
+
+    async def list_users(self) -> list[UserModel]:
+        return self.session.query(UserModel).all()
 
     async def get_user_by_id(self, id: int) -> UserModel:
         user = self.session.query(UserModel).filter_by(id=id).first()
@@ -100,4 +102,6 @@ class UserService:
         self.session.delete(user)
         self.session.commit()
 
-        dispatch(DeleteUserCrudEvent(user=user))
+        try:
+            await event_emitter.emit_async(UserCrudEvent(resource=user, crud_type=CrudType.DELETE))
+        except: pass

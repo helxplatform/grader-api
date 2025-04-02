@@ -1,7 +1,7 @@
 from typing import List
-from app.events import dispatch
+from app.events import event_emitter
 from app.models import InstructorModel
-from app.events import CreateUserCrudEvent
+from app.schemas import UserCrudEvent, CrudType
 from app.core.role_permissions import instructor_role
 from app.core.exceptions import NotAnInstructorException, UserAlreadyExistsException, UserNotFoundException
 from .user_service import UserService
@@ -63,7 +63,9 @@ class InstructorService(UserService):
             await cleanup_service.undo_create_user(delete_database_user=True, delete_password_secret=True, delete_gitea_user=True)
             raise e
 
-        dispatch(CreateUserCrudEvent(user=instructor))
+        try:
+            await event_emitter.emit_async(UserCrudEvent(resource=instructor, crud_type=CrudType.CREATE))
+        except: pass
 
     async def get_user_by_onyen(self, onyen: str) -> InstructorModel:
         user = await super().get_user_by_onyen(onyen)

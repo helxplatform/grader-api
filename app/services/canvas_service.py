@@ -26,6 +26,7 @@ class UpdateCanvasAssignmentBody(BaseModel):
     name: str | None
     available_date: datetime | None
     due_date: datetime | None
+    lock_date: datetime | None
     max_attempts: PositiveInt | None
     is_published: bool | None
 
@@ -409,6 +410,9 @@ class CanvasService:
         if "due_date" in payload:
             due_at = payload.pop("due_date")
             payload["due_at"] = due_at.isoformat() if due_at is not None else None
+        if "lock_date" in payload:
+            lock_at = payload.pop("lock_date")
+            payload["lock_at"] = lock_at.isoformat() if lock_at is not None else None
         if "max_attempts" in payload:
             allowed_attempts = payload.pop("max_attempts")
             payload["allowed_attempts"] = allowed_attempts if allowed_attempts is not None else -1

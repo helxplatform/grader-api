@@ -7,6 +7,7 @@ A microservice supporting student submissions to otter grader within EduHeLx
 
 ### Installation
 You'll need to have installed libpq (Postgres client) first before installing psycopg2 (Postgres driver).
+You'll also need to have a message broker (e.g., Redis) installed and running.
 ```bash
 # Setup virtual environment
 python3 -m venv venv
@@ -23,10 +24,35 @@ vim .env
 ### Running
 ```bash
 set -a && source .env
+python start.py -r
+# or
 python -m app.main
 # or
 uvicorn --reload app.main:app --log-level=info
 ```
+
+It is assumed that you've configured your .env properly. This includes the expectation that a Postgres
+instance, Gitea Assist, a Redis instance, celery worker(s), and celery beat are all configured and running.
+
+### Running a celery worker
+```bash
+set -a && source .env
+celery -A app.celery worker --loglevel=info --pool=eventlet
+```
+
+### Running celery beat (task scheduler)
+```bash
+set -a && source .env
+celery -A app.celery beat --loglevel=info
+```
+NOTE: Beat must run in addition to a worker, or scheduled will not be processed.
+
+### Running Flower (UI for Celery)
+```
+set -a && source .env
+export FLOWER_UNAUTHENTICATED_API=true
+```
+Flower is not at all necessary but can be a useful utility for monitoring Celery.
 
 ### Documentation
 The OpenAPI UI is accessible under /docs. To login, first use the login endpoint to get access/refresh tokens.

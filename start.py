@@ -51,15 +51,6 @@ def main(host: str, port: int, reload: bool, workers: int | None=None):
     alembic_cfg = Config("alembic.ini")
     command.upgrade(alembic_cfg, "head")
 
-
-    # Run setup wizard, if required.
-    try:
-        with SessionLocal() as session:
-            lms_sync_service = LmsSyncService(session)
-            asyncio.run(lms_sync_service.downsync())
-    except ValueError as e:
-        print(str(e))
-
     # Start the application
     uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers, log_config=None)
 
