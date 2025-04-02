@@ -20,16 +20,26 @@ from app.core.exceptions import (
 )
 from app.core.utils.datetime import get_now_with_tzinfo
 from app.services import StudentService, SubmissionService, CourseService, GiteaService
-from app.models import AssignmentModel, SubmissionModel, GradeReportModel
+from app.models import AssignmentModel, SubmissionModel, GradeReportModel, MasterNotebookRevisionModel
 from app.schemas import GradeReportSchema, SubmissionGradeSchema, IdentifiableSubmissionGradeSchema
 
 class GradingService:
     def __init__(self, session: Session):
         self.session = session
 
-    """ You can retrace which submissions were used to generate a grade report by using its created_date. """
-    async def compute_submissions_at_moment(self, assignment: AssignmentModel, moment: datetime | None = None) -> list[SubmissionModel]:
-        if moment is None: moment = get_now_with_tzinfo()
+    """ Pull the active submissions for each student for a particular assignment.
+    If a student has not made a submission for the revision, they are excluded.
+    Uses the active revision of the assignment if unspecified.
+    """
+    async def compute_submissions_for_assignment(
+        self,
+        assignment: AssignmentModel,
+        master_notebook_revision: MasterNotebookRevisionModel | None = None
+    ) -> list[SubmissionModel]:
+        if master_notebook_revision is None:
+            if assignment.master_notebook_revision_id is None:
+                raise AssignmentNotebookRevisionNotSelectedException()
+            master_notebook_revision = assignment.active_master_notebook_revision
 
         student_service = StudentService(self.session)
         submission_service = SubmissionService(self.session)
@@ -38,7 +48,7 @@ class GradingService:
         submissions = []
         for student in students:
             try:
-                active_submission = await submission_service.get_active_submission(student, assignment, moment)
+                active_submission = await submission_service.get_active_submission(student, assignment, master_notebook_revision)
                 submissions.append(active_submission)
             except SubmissionNotFoundException:
                 # The student hasn't made a submission
@@ -168,7 +178,7 @@ class GradingService:
         master_notebook_revision = assignment.active_master_notebook_revision
         master_notebook_content = master_notebook_revision.master_notebook_content
 
-        submissions = await self.compute_submissions_at_moment(assignment)
+        submissions = await self.compute_submissions_for_assignment(assignment)
         final_graded_notebook_content, zip_config_bytes = await self.generate_config(
             master_notebook_content,
             otter_config_content,
