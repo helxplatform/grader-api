@@ -3,7 +3,7 @@ from .endpoints import (
     submission_router, assignment_router, user_router,
     student_router, instructor_router, course_router,
     settings_router, auth_router, lms_router, job_router,
-    websocket_router
+    websocket_router, health_router
 )
 
 api_router = APIRouter()
@@ -18,3 +18,4 @@ api_router.include_router(auth_router.router, tags=["auth"])
 api_router.include_router(lms_router.router, tags=["lms"])
 api_router.include_router(job_router.router, tags=["jobs"])
 api_router.include_router(websocket_router.router, tags=["websocket"])
+api_router.include_router(health_router.router, tags=["health"])

@@ -146,6 +146,7 @@ log/*
 venv
 .idea/
 *.DS_Store
+.vscode
 
 # Helm for a while
 chart/Chart.lock

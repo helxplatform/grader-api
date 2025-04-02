@@ -1,8 +1,10 @@
 import logging
 import asyncio
+import sys
+import logging
+from logging.handlers import RotatingFileHandler
 from typing import List
-from pathlib import Path
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware import Middleware
 from fastapi_pagination import add_pagination
@@ -14,6 +16,39 @@ from app.core.exceptions import CustomException
 from app.services import WebsocketManagerService
 from eduhelx_utils.custom_logger import CustomizeLogger
 
+
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+
+def init_logging():
+    logging.getLogger("uvicorn.access").disabled = True
+    root_logger = logging.getLogger()
+    root_logger.disabled = True
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+def init_uvicorn_logger(formatter) -> logging.Logger:
+    logger = logging.getLogger("uvicorn")
+    logger.setLevel(logging.INFO)
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+    return logger
+
+def init_file_logger(formatter) -> logging.Logger | None:
+    file_logger = None
+    if settings.DEV_PHASE == DevPhase.PROD:
+        file_logger = logging.getLogger("file-logger")
+        file_logger.handlers.clear()
+        file_logger.setLevel(logging.DEBUG)
+        file_handler = RotatingFileHandler("logs/debug.log", maxBytes=1024*1024*100, backupCount=4)
+        file_handler.setFormatter(formatter)
+        file_logger.addHandler(file_handler)
+    return file_logger
+    
+    
+init_logging()
+uvicorn_logger = init_uvicorn_logger(formatter)
+file_logger = init_file_logger(formatter)
 
 def init_routers(app: FastAPI):
     app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -30,8 +65,19 @@ def init_listeners(app: FastAPI):
         if app.state.pubsub_task is not None:
             app.state.pubsub_task.cancel()
             
+    # Errors go to the most specialized handler, so this will only pick up
+    # non CustomException and non FastAPI/starlette errors (internal server errors)
+    @app.exception_handler(Exception)
+    async def base_exception_handler(request: Request, exc: Exception):
+        content = { "error_code": 500, "message": "Internal server error" }
+        return JSONResponse(
+            status_code=500,
+            content=content
+        )
     @app.exception_handler(CustomException)
     async def custom_exception_handler(request: Request, exc: CustomException):
+        # Only log regular CustomException errors under debug
+        uvicorn_logger.debug(exc.stack)
         content = { "error_code": exc.error_code, "message": exc.message }
         if settings.DEV_PHASE == DevPhase.DEV:
             content["stack"] = exc.stack
@@ -70,27 +116,24 @@ def make_middleware() -> List[Middleware]:
             AuthenticationMiddleware,
             backend=AuthBackend(),
             on_error=on_auth_error
+        ),
+        Middleware(
+            LogMiddleware, 
+            logger=uvicorn_logger,
+            file_logger=file_logger
         )
     ]
-
-
-logger = logging.getLogger(__name__)
-config_path=Path(__file__).with_name("logging_config.json")
 
 def create_app() -> FastAPI:
     app = FastAPI(
         openapi_url=f"{ settings.API_V1_STR }/openapi.json",
         middleware=make_middleware()
     )
-    if not settings.DISABLE_LOGGER:
-        logger = CustomizeLogger.make_logger(config_path)
-        app.logger = logger
-        app.add_middleware(LogMiddleware)
     init_monkeypatch()
     init_routers(app)
     init_listeners(app)
     add_pagination(app)
-    
+
     return app
 
 app = create_app()

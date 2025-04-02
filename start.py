@@ -8,6 +8,7 @@ from alembic import command
 from app.services import LmsSyncService
 from app.database import SessionLocal
 
+
 def positive_int(value):
     ivalue = int(value)
     if ivalue <= 0: raise argparse.ArgumentTypeError(f"{ value } must be a positive integer")
@@ -49,7 +50,7 @@ def main(host: str, port: int, reload: bool, workers: int | None=None):
     command.upgrade(alembic_cfg, "head")
 
     # Start the application
-    uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers)
+    uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers, log_config=None)
 
 
 if __name__ == "__main__":
