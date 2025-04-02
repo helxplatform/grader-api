@@ -155,7 +155,6 @@ class GradingService:
     async def grade_assignment(
         self,
         assignment: AssignmentModel,
-        master_notebook_content: str,
         otter_config_content: str,
         requirements_txt_content: str = "otter-grader==5.5.0",
         *,
@@ -165,6 +164,9 @@ class GradingService:
 
         if assignment.manual_grading:
             raise AutogradingDisabledException()
+        
+        master_notebook_revision = assignment.active_master_notebook_revision
+        master_notebook_content = master_notebook_revision.master_notebook_content
 
         submissions = await self.compute_submissions_at_moment(assignment)
         final_graded_notebook_content, zip_config_bytes = await self.generate_config(

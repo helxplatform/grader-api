@@ -33,7 +33,6 @@ class UpdateAssignmentBody(BaseModel):
     master_notebook_revision: UpdateMasterNotebookRevisionSchema = UNSET
 
 class OtterGradingBody(BaseModel):
-    master_notebook_content: str
     otter_config_content: str
 
 class ManualGrade(BaseModel):
@@ -109,7 +108,6 @@ async def grade_assignment(
     assignment = await AssignmentService(db).get_assignment_by_name(assignment_name)
     return await GradingService(db).grade_assignment(
         assignment,
-        grading_body.master_notebook_content,
         grading_body.otter_config_content
     )
 
