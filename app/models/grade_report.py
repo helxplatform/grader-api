@@ -1,9 +1,9 @@
 from __future__ import annotations
 from sqlalchemy import Column, Sequence, ForeignKey, Integer, Float, DateTime, ARRAY, Text, func
 from sqlalchemy.orm import relationship, backref
-from src.database import Base
-from src.models.assignment import AssignmentModel
-from src.schemas.grade_report import SubmissionGradeSchema
+from app.database import Base
+from app.models.assignment import AssignmentModel
+from app.schemas.grade_report import SubmissionGradeSchema
 import numpy as np
 
 class GradeReportModel(Base):

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from src.models import AssignmentModel
+from app.models import AssignmentModel
 
 # An uncreated assignment is an assignment with
 # either an unset available_date or an unset due_date.

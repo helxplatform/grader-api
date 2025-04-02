@@ -3,10 +3,10 @@
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 from typing import Union
-from src.schemas import StudentSchema, InstructorSchema
-from src.services import UserService, LDAPService
-from src.services.ldap_service import LDAPUserInfoSchema
-from src.core.dependencies import get_db, PermissionDependency, UserIsSuperuserPermission, RequireLoginPermission
+from app.schemas import StudentSchema, InstructorSchema
+from app.services import UserService, LDAPService
+from app.services.ldap_service import LDAPUserInfoSchema
+from app.core.dependencies import get_db, PermissionDependency, UserIsSuperuserPermission, RequireLoginPermission
 
 
 router = APIRouter()

@@ -13,15 +13,15 @@ from zoneinfo import ZoneInfo
 from io import BytesIO
 from pathlib import Path
 from sqlalchemy.orm import Session
-from src.core.config import settings, DevPhase
-from src.core.exceptions import (
+from app.core.config import settings, DevPhase
+from app.core.exceptions import (
     SubmissionNotFoundException, OtterConfigViolationException, AutogradingDisabledException,
     StudentGradedMultipleTimesException, SubmissionMismatchException
 )
-from src.core.utils.datetime import get_now_with_tzinfo
-from src.services import StudentService, SubmissionService, CourseService, GiteaService
-from src.models import AssignmentModel, SubmissionModel, GradeReportModel
-from src.schemas import GradeReportSchema, SubmissionGradeSchema, IdentifiableSubmissionGradeSchema
+from app.core.utils.datetime import get_now_with_tzinfo
+from app.services import StudentService, SubmissionService, CourseService, GiteaService
+from app.models import AssignmentModel, SubmissionModel, GradeReportModel
+from app.schemas import GradeReportSchema, SubmissionGradeSchema, IdentifiableSubmissionGradeSchema
 
 class GradingService:
     def __init__(self, session: Session):
@@ -145,7 +145,7 @@ class GradingService:
         *,
         dry_run=False
     ) -> GradeReportModel:
-        from src.services import LmsSyncService, CleanupService
+        from app.services import LmsSyncService, CleanupService
 
         if assignment.manual_grading:
             raise AutogradingDisabledException()
@@ -250,7 +250,7 @@ class GradingService:
         *,
         dry_run=False
     ) -> GradeReportModel:
-        from src.services import LmsSyncService, CleanupService
+        from app.services import LmsSyncService, CleanupService
         
         lms_sync_service = LmsSyncService(self.session)
 

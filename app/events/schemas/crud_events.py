@@ -1,8 +1,8 @@
 from enum import Enum
 from pydantic import BaseModel
 from fastapi_events.registry.payload_schema import registry
-from src.models import CourseModel, AssignmentModel, SubmissionModel, UserModel, StudentModel, InstructorModel
-from src.models.user import UserType
+from app.models import CourseModel, AssignmentModel, SubmissionModel, UserModel, StudentModel, InstructorModel
+from app.models.user import UserType
 
 class CrudType(str, Enum):
     CREATE = "CREATE"

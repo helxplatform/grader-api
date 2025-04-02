@@ -1,5 +1,5 @@
-from src.models import InstructorModel
-from src.core.role_permissions import instructor_role, admin_role
+from app.models import InstructorModel
+from app.core.role_permissions import instructor_role, admin_role
 
 basic_instructor = InstructorModel(
     onyen="basicinstructor",

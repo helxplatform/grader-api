@@ -6,7 +6,7 @@ import os
 current_dir = os.path.abspath(os.path.dirname(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
 sys.path.insert(0, parent_dir)
-from src.core.middleware.logger import LogMiddleware
+from app.core.middleware.logger import LogMiddleware
 
 
 class MockApp:

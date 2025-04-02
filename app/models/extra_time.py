@@ -4,7 +4,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.orm import relationship, backref
-from src.database import Base
+from app.database import Base
 
 class ExtraTimeModel(Base):
     __tablename__ = "extra_time"

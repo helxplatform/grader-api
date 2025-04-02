@@ -4,10 +4,10 @@ from unittest.mock import MagicMock, patch
 from pydantic import BaseModel
 
 from sqlalchemy.orm import Session
-from src.api.api_v1.endpoints.instructor_router import router
-from src.schemas import InstructorSchema
-from src.services import InstructorService
-from src.core.dependencies import get_db, PermissionDependency, InstructorListPermission, InstructorCreatePermission
+from app.api.api_v1.endpoints.instructor_router import router
+from app.schemas import InstructorSchema
+from app.services import InstructorService
+from app.core.dependencies import get_db, PermissionDependency, InstructorListPermission, InstructorCreatePermission
 
 class CreateInstructorBody(BaseModel):
     onyen: str

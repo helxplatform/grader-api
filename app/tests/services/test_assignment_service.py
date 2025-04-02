@@ -3,10 +3,10 @@ import json
 import unittest
 from unittest.mock import MagicMock, patch
 from sqlalchemy.orm import Session
-from src.services import AssignmentService
-from src.models import AssignmentModel
-from src.schemas import UpdateAssignmentSchema
-from src.core.exceptions import AssignmentNotFoundException
+from app.services import AssignmentService
+from app.models import AssignmentModel
+from app.schemas import UpdateAssignmentSchema
+from app.core.exceptions import AssignmentNotFoundException
 
 class TestAssignmentService(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):

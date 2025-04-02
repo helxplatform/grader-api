@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
-from src.events import dispatch
-from src.models import UserModel, AutoPasswordAuthModel
-from src.events import DeleteUserCrudEvent
-from src.schemas import RefreshTokenSchema
-from src.core.config import settings
-from src.core.utils.token_helper import TokenHelper
-from src.core.utils.auth_helper import PasswordHelper
-from src.core.middleware.authentication import CurrentUser
-from src.core.exceptions import (
+from app.events import dispatch
+from app.models import UserModel, AutoPasswordAuthModel
+from app.events import DeleteUserCrudEvent
+from app.schemas import RefreshTokenSchema
+from app.core.config import settings
+from app.core.utils.token_helper import TokenHelper
+from app.core.utils.auth_helper import PasswordHelper
+from app.core.middleware.authentication import CurrentUser
+from app.core.exceptions import (
     PasswordDoesNotMatchException,
     UserNotFoundException,
     PasswordDoesNotMatchException
@@ -55,7 +55,7 @@ class UserService:
         return await self._create_user_token(user)
     
     async def create_user_auto_password_auth(self, onyen: str) -> str:
-        from src.services import CourseService, KubernetesService
+        from app.services import CourseService, KubernetesService
         
         autogen_password = PasswordHelper.generate_password(64)
         autogen_password_hash = PasswordHelper.hash_password(autogen_password)
@@ -82,7 +82,7 @@ class UserService:
         self,
         onyen: str
     ) -> None:
-        from src.services import GiteaService, KubernetesService, CourseService, CleanupService
+        from app.services import GiteaService, KubernetesService, CourseService, CleanupService
         
         course = await CourseService(self.session).get_course()
         user = await self.get_user_by_onyen(onyen)

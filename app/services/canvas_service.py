@@ -8,12 +8,12 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, PositiveInt
 from datetime import datetime
 from sqlalchemy.orm import Session
-from src.core.config import settings
-from src.enums.canvas.canvas_workflow_state_filter import CanvasWorkflowStateFilter
-from src.models import UserModel, OnyenPIDModel
-from src.services import UserService, UserType
-from src.core.utils.datetime import get_now_with_tzinfo
-from src.core.exceptions import (
+from app.core.config import settings
+from app.enums.canvas.canvas_workflow_state_filter import CanvasWorkflowStateFilter
+from app.models import UserModel, OnyenPIDModel
+from app.services import UserService, UserType
+from app.core.utils.datetime import get_now_with_tzinfo
+from app.core.exceptions import (
     LMSUserNotFoundException, LMSUserPIDAlreadyAssociatedException, LMSBackendException,
     LMSFolderNotFoundException, LMSFileUploadException
 )

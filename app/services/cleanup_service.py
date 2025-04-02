@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from src.models import UserModel, CourseModel, GradeReportModel
-from src.services import GiteaService, KubernetesService
+from app.models import UserModel, CourseModel, GradeReportModel
+from app.services import GiteaService, KubernetesService
 
 class CleanupService:
     class Grading:
@@ -19,7 +19,7 @@ class CleanupService:
             self.course = course
 
         async def undo_create_course(self, delete_database_course=False, delete_gitea_organization=False):
-            from src.services import CourseService
+            from app.services import CourseService
 
             gitea_service = GiteaService(self.session)
 
@@ -38,7 +38,7 @@ class CleanupService:
             self.autogen_password = autogen_password
 
         async def undo_create_user(self, delete_database_user=False, delete_password_secret=False, delete_gitea_user=False):
-            from src.services import CourseService
+            from app.services import CourseService
 
             course = await CourseService(self.session).get_course()
             if delete_database_user:
@@ -52,7 +52,7 @@ class CleanupService:
                 await GiteaService(self.session).delete_user(self.user.onyen, purge=True)
             
         async def undo_delete_user(self, create_password_secret=False):
-            from src.services import CourseService
+            from app.services import CourseService
 
             course = await CourseService(self.session).get_course()
             if create_password_secret:

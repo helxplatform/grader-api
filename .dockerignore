@@ -9,7 +9,7 @@
 activate
 base-image/
 host/
-src/resources/
+app/resources/
 Makefile
 make-config.env
 mk_passwd.py

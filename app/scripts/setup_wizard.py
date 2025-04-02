@@ -1,7 +1,7 @@
-from src.database import SessionLocal
-from src.services import CourseService
-from src.services import InstructorService
-from src.core.config import settings
+from app.database import SessionLocal
+from app.services import CourseService
+from app.services import InstructorService
+from app.core.config import settings
 from scripts import setup_course, setup_instructor
 
 async def setup_wizard_has_ran() -> bool:

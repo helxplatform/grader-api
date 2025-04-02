@@ -1,10 +1,10 @@
 import datetime
 import unittest
 from unittest.mock import MagicMock
-from src.models.course import CourseModel
-from src.services import StudentAssignmentService
-from src.models import AssignmentModel, StudentModel, ExtraTimeModel
-from src.core.exceptions import (
+from app.models.course import CourseModel
+from app.services import StudentAssignmentService
+from app.models import AssignmentModel, StudentModel, ExtraTimeModel
+from app.core.exceptions import (
     AssignmentNotOpenException,
     AssignmentNotCreatedException,
     AssignmentClosedException

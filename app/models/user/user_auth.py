@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Text, ForeignKey
-from src.database import Base
+from app.database import Base
 
 class AutoPasswordAuthModel(Base):
     __tablename__ = "user_auto_password_auth"

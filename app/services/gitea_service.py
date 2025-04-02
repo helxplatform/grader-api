@@ -6,10 +6,10 @@ from datetime import datetime
 from dateutil import tz
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from src.core.config import settings
-from src.services import AssignmentService
-from src.schemas import CommitSchema
-from src.core.utils.header import parse_content_disposition_header
+from app.core.config import settings
+from app.services import AssignmentService
+from app.schemas import CommitSchema
+from app.core.utils.header import parse_content_disposition_header
 import httpx
 import base64
 

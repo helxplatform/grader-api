@@ -2,18 +2,18 @@ import asyncio
 import os.path
 from typing import BinaryIO
 from sqlalchemy.orm import Session
-from src.core.config import settings
-from src.services.canvas_service import CanvasService, UpdateCanvasAssignmentBody, DuplicateFileAction
-from src.services.course_service import CourseService
-from src.services.ldap_service import LDAPService
-from src.services.assignment_service import AssignmentService
-from src.services.grading_service import GradingService
-from src.services.user.student_service import StudentService
-from src.services.user.instructor_service import InstructorService
-from src.models import AssignmentModel, SubmissionModel
-from src.schemas.course import UpdateCourseSchema
-from src.schemas.assignment import UpdateAssignmentSchema
-from src.core.exceptions import (
+from app.core.config import settings
+from app.services.canvas_service import CanvasService, UpdateCanvasAssignmentBody, DuplicateFileAction
+from app.services.course_service import CourseService
+from app.services.ldap_service import LDAPService
+from app.services.assignment_service import AssignmentService
+from app.services.grading_service import GradingService
+from app.services.user.student_service import StudentService
+from app.services.user.instructor_service import InstructorService
+from app.models import AssignmentModel, SubmissionModel
+from app.schemas.course import UpdateCourseSchema
+from app.schemas.assignment import UpdateAssignmentSchema
+from app.core.exceptions import (
     AssignmentNotFoundException, NoCourseExistsException, 
     UserNotFoundException, LMSUserNotFoundException
 )

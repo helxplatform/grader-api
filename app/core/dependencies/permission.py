@@ -5,11 +5,11 @@ from fastapi import Request
 from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.security.base import SecurityBase
 
-from src.core.config import settings
-from src.database import SessionLocal
-from src.models import StudentModel, InstructorModel
-from src.core.role_permissions import UserPermission
-from src.core.exceptions import (
+from app.core.config import settings
+from app.database import SessionLocal
+from app.models import StudentModel, InstructorModel
+from app.core.role_permissions import UserPermission
+from app.core.exceptions import (
     UnauthorizedException, MissingPermissionException, UserNotFoundException,
     NotAStudentException, NotAnInstructorException, NotASuperuserException
 )
@@ -122,7 +122,7 @@ class PermissionDependency(SecurityBase):
         self.scheme_name = self.__class__.__name__
 
     async def __call__(self, request: Request):
-        from src.services import UserService
+        from app.services import UserService
         
         if settings.DISABLE_AUTHENTICATION and settings.IMPERSONATE_USER is not None:
             if request.user.onyen is None:

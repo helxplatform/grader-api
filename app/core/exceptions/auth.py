@@ -1,5 +1,5 @@
 from .base import ForbiddenException
-from src.core.role_permissions import UserPermission
+from app.core.role_permissions import UserPermission
 
 class MissingPermissionException(ForbiddenException):
     code = 403

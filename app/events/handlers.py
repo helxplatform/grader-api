@@ -4,10 +4,10 @@ from fastapi_events.typing import Event
 from sqlalchemy.orm import Session
 
 from .schemas import SyncEvents
-from src.database import SessionLocal
-from src.models import AssignmentModel
-from src.events import ModifyAssignmentCrudEvent
-from src.core.dependencies import get_db_persistent
+from app.database import SessionLocal
+from app.models import AssignmentModel
+from app.events import ModifyAssignmentCrudEvent
+from app.core.dependencies import get_db_persistent
 
 """
 NOTE: Use `get_db_persistent` instead of `get_db`. FastAPI-Events does not support generator-based DI.
@@ -17,7 +17,7 @@ You MUST call Session.close() once you are done with the database session.
 
 @local_handler.register(event_name="crud:assignment:*")
 async def handle_sync_create_assignment(event: ModifyAssignmentCrudEvent):
-    from src.services import GiteaService, StudentService, CourseService
+    from app.services import GiteaService, StudentService, CourseService
     
     event_name, payload = event
     assignment = payload["assignment"]

@@ -5,12 +5,12 @@ from pathlib import Path
 from datetime import datetime
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
-from src.events import dispatch
-from src.models import StudentModel, AssignmentModel, SubmissionModel
-from src.schemas import SubmissionSchema, DatabaseSubmissionSchema
-from src.events import CreateSubmissionCrudEvent
-from src.core.exceptions import SubmissionNotFoundException
-from src.core.utils.datetime import get_now_with_tzinfo
+from app.events import dispatch
+from app.models import StudentModel, AssignmentModel, SubmissionModel
+from app.schemas import SubmissionSchema, DatabaseSubmissionSchema
+from app.events import CreateSubmissionCrudEvent
+from app.core.exceptions import SubmissionNotFoundException
+from app.core.utils.datetime import get_now_with_tzinfo
 
 class SubmissionService:
     def __init__(self, session: Session):
@@ -22,7 +22,7 @@ class SubmissionService:
         assignment: AssignmentModel,
         commit_id: str
     ) -> SubmissionModel:
-        from src.services import StudentAssignmentService, CourseService
+        from app.services import StudentAssignmentService, CourseService
 
         # TODO: We should validate that the submitted commit id actually exists in gitea before persisting it in the database.
         # We don't want another component of EduHeLx to assume the commit we return exists and crash when it doesn't.

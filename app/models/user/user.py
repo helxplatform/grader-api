@@ -1,8 +1,8 @@
 import enum
 from sqlalchemy import Column, Sequence, Integer, Text, Enum, ForeignKey
 from sqlalchemy.orm import relationship
-from src.database import Base
-from src.core.role_permissions import UserRoleType
+from app.database import Base
+from app.core.role_permissions import UserRoleType
 
 class UserType(enum.Enum):
     STUDENT = "student"

@@ -4,9 +4,9 @@ from fastapi import Request
 from datetime import datetime
 from sqlalchemy.orm import Session
 
-from src.api.api_v1.endpoints.student_router import router
-from src.schemas import StudentSchema
-from src.services import StudentService
+from app.api.api_v1.endpoints.student_router import router
+from app.schemas import StudentSchema
+from app.services import StudentService
 from pydantic import BaseModel
 
 class CreateStudentBody(BaseModel):

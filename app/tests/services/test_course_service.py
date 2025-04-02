@@ -3,12 +3,12 @@ import httpx
 from unittest.mock import patch, AsyncMock, MagicMock
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
-from src.services import CourseService
-from src.models import CourseModel, InstructorModel
-from src.services.user import InstructorService
+from app.services import CourseService
+from app.models import CourseModel, InstructorModel
+from app.services.user import InstructorService
 from tests.data.database.course import data
-from src.schemas import CourseWithInstructorsSchema
-from src.core.exceptions import (
+from app.schemas import CourseWithInstructorsSchema
+from app.core.exceptions import (
     MultipleCoursesExistException,
     NoCourseExistsException,
     CourseAlreadyExistsException

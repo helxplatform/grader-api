@@ -3,10 +3,10 @@ from pydantic import BaseModel
 from fastapi import APIRouter, Request, Query, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
-from src.schemas import SubmissionSchema
-from src.services import SubmissionService, StudentService, AssignmentService, GiteaService, CourseService, LmsSyncService
-from src.models import SubmissionModel
-from src.core.dependencies import get_db, PermissionDependency, UserIsStudentPermission, SubmissionCreatePermission, SubmissionListPermission, SubmissionDownloadPermission
+from app.schemas import SubmissionSchema
+from app.services import SubmissionService, StudentService, AssignmentService, GiteaService, CourseService, LmsSyncService
+from app.models import SubmissionModel
+from app.core.dependencies import get_db, PermissionDependency, UserIsStudentPermission, SubmissionCreatePermission, SubmissionListPermission, SubmissionDownloadPermission
 
 router = APIRouter()
 

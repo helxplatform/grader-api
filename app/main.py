@@ -10,10 +10,10 @@ from fastapi_events.middleware import EventHandlerASGIMiddleware
 from fastapi_events.handlers.local import local_handler
 from starlette.middleware.cors import CORSMiddleware
 
-from src.api.api_v1 import api_router
-from src.core.config import settings, DevPhase
-from src.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddleware
-from src.core.exceptions import CustomException
+from app.api.api_v1 import api_router
+from app.core.config import settings, DevPhase
+from app.core.middleware import AuthenticationMiddleware, AuthBackend, LogMiddleware
+from app.core.exceptions import CustomException
 
 
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -77,7 +77,7 @@ def init_listeners(app: FastAPI):
 def init_monkeypatch():
     ### Monkey patch serializers for custom types
     from pydantic.json import ENCODERS_BY_TYPE
-    from src.schemas._unset import _UNSET
+    from app.schemas._unset import _UNSET
     ENCODERS_BY_TYPE[_UNSET] = lambda _: None
 
 def on_auth_error(request: Request, exc: Exception):

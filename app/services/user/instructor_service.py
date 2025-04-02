@@ -1,9 +1,9 @@
 from typing import List
-from src.events import dispatch
-from src.models import InstructorModel
-from src.events import CreateUserCrudEvent
-from src.core.role_permissions import instructor_role
-from src.core.exceptions import NotAnInstructorException, UserAlreadyExistsException, UserNotFoundException
+from app.events import dispatch
+from app.models import InstructorModel
+from app.events import CreateUserCrudEvent
+from app.core.role_permissions import instructor_role
+from app.core.exceptions import NotAnInstructorException, UserAlreadyExistsException, UserNotFoundException
 from .user_service import UserService
 
 class InstructorService(UserService):
@@ -16,7 +16,7 @@ class InstructorService(UserService):
         name: str,
         email: str
     ) -> InstructorModel:
-        from src.services import GiteaService, CourseService, CleanupService
+        from app.services import GiteaService, CourseService, CleanupService
 
         try:
             await super().get_user_by_onyen(onyen)

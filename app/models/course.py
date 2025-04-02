@@ -1,6 +1,6 @@
 from __future__ import annotations
 from sqlalchemy import Column, Sequence, Integer, Text, DateTime
-from src.database import Base
+from app.database import Base
 
 class CourseModel(Base):
     __tablename__ = "course"

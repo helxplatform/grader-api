@@ -6,7 +6,7 @@ Create Date: 2023-09-15 16:57:46.531630+00:00
 
 """
 from alembic import op
-from src.core.role_permissions import UserRoleType
+from app.core.role_permissions import UserRoleType
 import sqlalchemy as sa
 
 

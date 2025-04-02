@@ -4,7 +4,7 @@ from sqlalchemy import (
     Boolean, func
 )
 from sqlalchemy.orm import relationship, backref
-from src.database import Base
+from app.database import Base
 
 class SubmissionModel(Base):
     __tablename__ = "submission"

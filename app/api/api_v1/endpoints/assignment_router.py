@@ -3,18 +3,18 @@ from datetime import datetime
 from typing import List, Union, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from src.models import AssignmentModel, StudentModel, InstructorModel
-from src.schemas import (
+from app.models import AssignmentModel, StudentModel, InstructorModel
+from app.schemas import (
     InstructorAssignmentSchema, StudentAssignmentSchema, AssignmentSchema,
     UpdateAssignmentSchema, GradeReportSchema, IdentifiableSubmissionGradeSchema
 )
-from src.schemas._unset import UNSET
-from src.services import (
+from app.schemas._unset import UNSET
+from app.services import (
     AssignmentService, InstructorAssignmentService, StudentAssignmentService,
     UserService, LmsSyncService, GradingService, SubmissionService
 )
-from src.core.dependencies import get_db, PermissionDependency, RequireLoginPermission, AssignmentModifyPermission, UserIsInstructorPermission
-from src.services.course_service import CourseService
+from app.core.dependencies import get_db, PermissionDependency, RequireLoginPermission, AssignmentModifyPermission, UserIsInstructorPermission
+from app.services.course_service import CourseService
 
 router = APIRouter()
 

@@ -4,13 +4,13 @@ from pydantic import PositiveInt
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from src.core.exceptions.assignment import AssignmentCannotBeUnpublished
-from src.events import dispatch
-from src.models import AssignmentModel, InstructorModel, StudentModel, ExtraTimeModel
-from src.models.course import CourseModel
-from src.schemas import AssignmentSchema, InstructorAssignmentSchema, StudentAssignmentSchema, UpdateAssignmentSchema
-from src.events import CreateAssignmentCrudEvent, ModifyAssignmentCrudEvent, DeleteAssignmentCrudEvent
-from src.core.exceptions import (
+from app.core.exceptions.assignment import AssignmentCannotBeUnpublished
+from app.events import dispatch
+from app.models import AssignmentModel, InstructorModel, StudentModel, ExtraTimeModel
+from app.models.course import CourseModel
+from app.schemas import AssignmentSchema, InstructorAssignmentSchema, StudentAssignmentSchema, UpdateAssignmentSchema
+from app.events import CreateAssignmentCrudEvent, ModifyAssignmentCrudEvent, DeleteAssignmentCrudEvent
+from app.core.exceptions import (
     AssignmentNotFoundException,
     AssignmentNotPublishedException,
     AssignmentNotOpenException,
@@ -18,8 +18,8 @@ from src.core.exceptions import (
     AssignmentDueBeforeOpenException,
     SubmissionMaxAttemptsReachedException
 )
-from src.enums.assignment_status import AssignmentStatus
-from src.services.submission_service import SubmissionService
+from app.enums.assignment_status import AssignmentStatus
+from app.services.submission_service import SubmissionService
 
 class AssignmentService:
     def __init__(self, session: Session):
@@ -35,7 +35,7 @@ class AssignmentService:
         due_date: datetime | None,
         is_published: bool
     ) -> AssignmentModel:
-        from src.services import GiteaService, FileOperation, FileOperationType, CourseService
+        from app.services import GiteaService, FileOperation, FileOperationType, CourseService
 
         if available_date is not None and due_date is not None and available_date >= due_date:
             raise AssignmentDueBeforeOpenException
@@ -120,7 +120,7 @@ class AssignmentService:
         return assignment
     
     async def delete_assignment(self, assignment: AssignmentModel) -> None:
-        from src.services import GiteaService, CourseService, FileOperation, FileOperationType
+        from app.services import GiteaService, CourseService, FileOperation, FileOperationType
 
         gitea_service = GiteaService(self.session)
         course_service = CourseService(self.session)
@@ -175,7 +175,7 @@ class AssignmentService:
             update_assignment: UpdateAssignmentSchema, 
             student_id: int | None = None
     ) -> AssignmentModel:
-        from src.services.lms_sync_service import LmsSyncService
+        from app.services.lms_sync_service import LmsSyncService
 
         update_fields = update_assignment.dict(exclude_unset=True)
         

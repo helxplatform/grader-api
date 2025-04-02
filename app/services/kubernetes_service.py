@@ -1,7 +1,7 @@
 import base64
 import os
 from kubernetes import client, config
-from src.models.user import UserType
+from app.models.user import UserType
 
 class KubernetesService:
     def __init__(self):

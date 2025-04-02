@@ -17,8 +17,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from src.database import Base
-from src.models.grade_report import *
+from app.database import Base
+from app.models.grade_report import *
 
 target_metadata = Base.metadata
 
@@ -63,7 +63,7 @@ def run_migrations_online() -> None:
     """
 
     try:
-        from src.core.config import settings
+        from app.core.config import settings
         config.set_main_option('sqlalchemy.url',settings.SQLALCHEMY_DATABASE_URI)
     except Exception:
         pass

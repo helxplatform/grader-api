@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, PositiveInt
 
-from src.enums.assignment_status import AssignmentStatus
+from app.enums.assignment_status import AssignmentStatus
 from ._unset import UNSET
 
 class AssignmentSchema(BaseModel):

@@ -6,7 +6,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
-from src.database import Base
+from app.database import Base
 
 class AssignmentModel(Base):
     __tablename__ = "assignment"

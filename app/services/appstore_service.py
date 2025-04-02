@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-from src.services import UserService
-from src.models import UserModel
-from src.models.user import UserType
-from src.core.config import settings
-from src.core.exceptions import AppstoreUserNotFoundException, AppstoreUserDoesNotMatchException, AppstoreUnsupportedUserTypeException, UserNotFoundException
+from app.services import UserService
+from app.models import UserModel
+from app.models.user import UserType
+from app.core.config import settings
+from app.core.exceptions import AppstoreUserNotFoundException, AppstoreUserDoesNotMatchException, AppstoreUnsupportedUserTypeException, UserNotFoundException
 import httpx
 
 class AppstoreService:

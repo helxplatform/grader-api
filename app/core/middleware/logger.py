@@ -9,7 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.types import Message
 
-from src.core.utils.async_iterator_wrapper import AsyncIteratorWrapper
+from app.core.utils.async_iterator_wrapper import AsyncIteratorWrapper
 
 
 class LogMiddleware(BaseHTTPMiddleware):

@@ -2,9 +2,9 @@ from typing import List
 from pydantic import BaseModel
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
-from src.schemas import StudentSchema
-from src.services import StudentService
-from src.core.dependencies import get_db, PermissionDependency, StudentListPermission, StudentCreatePermission, UserIsStudentPermission
+from app.schemas import StudentSchema
+from app.services import StudentService
+from app.core.dependencies import get_db, PermissionDependency, StudentListPermission, StudentCreatePermission, UserIsStudentPermission
 
 router = APIRouter()
 
