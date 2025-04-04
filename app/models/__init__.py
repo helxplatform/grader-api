@@ -5,3 +5,4 @@ from .extra_time import ExtraTimeModel
 from .course import CourseModel
 from .grade_report import GradeReportModel
 from .job_status import JobStatusModel
+from .master_notebook_revision import MasterNotebookRevisionModel

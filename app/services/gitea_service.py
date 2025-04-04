@@ -223,6 +223,22 @@ class GiteaService:
         file_stream.name = file_name
         return file_stream
     
+    async def get_file_contents(
+        self,
+        name: str,
+        owner: str,
+        path: str,
+        # Defaults to the head of the repository's default branch.
+        treeish_id: str | None = None
+    ) -> str | None:
+        res = await self._get("/repos/contents", params={
+            "name": name,
+            "owner": owner,
+            "path": path,
+            "treeish_id": treeish_id
+        })
+        return res.text
+    
     async def get_commits(
         self,
         name: str,

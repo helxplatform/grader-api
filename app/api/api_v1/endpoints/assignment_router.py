@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from app.models import AssignmentModel, StudentModel, InstructorModel
 from app.schemas import (
     InstructorAssignmentSchema, StudentAssignmentSchema, AssignmentSchema,
-    UpdateAssignmentSchema, GradeReportSchema, IdentifiableSubmissionGradeSchema
+    UpdateAssignmentSchema, GradeReportSchema, IdentifiableSubmissionGradeSchema,
+    UpdateMasterNotebookRevisionSchema
 )
 from app.schemas._unset import UNSET
 from app.services import (
@@ -23,16 +24,15 @@ router = APIRouter()
 class UpdateAssignmentBody(BaseModel):
     name: str = UNSET
     directory_path: str = UNSET
-    master_notebook_path: str = UNSET
     grader_question_feedback: bool = UNSET
     max_attempts: PositiveInt | None
     available_date: datetime | None
     due_date: datetime | None
     is_published: bool = UNSET
     manual_grading: bool = UNSET
+    master_notebook_revision: UpdateMasterNotebookRevisionSchema = UNSET
 
 class OtterGradingBody(BaseModel):
-    master_notebook_content: str
     otter_config_content: str
 
 class ManualGrade(BaseModel):
@@ -108,7 +108,6 @@ async def grade_assignment(
     assignment = await AssignmentService(db).get_assignment_by_name(assignment_name)
     return await GradingService(db).grade_assignment(
         assignment,
-        grading_body.master_notebook_content,
         grading_body.otter_config_content
     )
 
