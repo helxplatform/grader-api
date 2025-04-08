@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 from alembic import command
 from alembic.config import Config
-from src.database import SessionLocal
-from src.services import LmsSyncService
+from app.database import SessionLocal
+from app.services import LmsSyncService
 
 
 def positive_int(value):
@@ -51,17 +51,8 @@ def main(host: str, port: int, reload: bool, workers: int | None=None):
     alembic_cfg = Config("alembic.ini")
     command.upgrade(alembic_cfg, "head")
 
-
-    # Run setup wizard, if required.
-    try:
-        with SessionLocal() as session:
-            lms_sync_service = LmsSyncService(session)
-            asyncio.run(lms_sync_service.downsync())
-    except ValueError as e:
-        print(str(e))
-
     # Start the application
-    uvicorn.run("src.main:app", host=host, port=port, reload=reload, workers=workers, log_config=None)
+    uvicorn.run("app.main:app", host=host, port=port, reload=reload, workers=workers, log_config=None)
 
 
 if __name__ == "__main__":
