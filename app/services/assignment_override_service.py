@@ -2,6 +2,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models import AssignmentOverrideModel
 from app.enums.assignment_status import AssignmentStatus
+from app.core.exceptions import AssignmentOverrideNotFoundException
 
 class AssignmentOverrideService:
     def __init__(self, session: Session):
@@ -36,27 +37,40 @@ class AssignmentOverrideService:
         self,
         override_id: int
     ) -> list[AssignmentOverrideModel]:
-        return self.session.query(AssignmentOverrideModel) \
+        override = self.session.query(AssignmentOverrideModel) \
             .filter_by(id=override_id) \
             .all()
+        
+        if override is None:
+            raise AssignmentOverrideNotFoundException()
+        return override
+    
     
     async def get_assignment_overrides_by_assignment_id(
         self,
         assignment_id: int
     ) -> list[AssignmentOverrideModel]:
-        return self.session.query(AssignmentOverrideModel) \
+        override = self.session.query(AssignmentOverrideModel) \
             .filter_by(assignment_id=assignment_id) \
             .all()
+        
+        if override is None:
+            raise AssignmentOverrideNotFoundException()
+        return override
     
     async def get_assignment_override_by_student_id(
         self,
         assignment_id: int,
         student_id: int
     ) -> AssignmentOverrideModel:
-        return self.session.query(AssignmentOverrideModel) \
+        override = self.session.query(AssignmentOverrideModel) \
             .filter_by(assignment_id=assignment_id) \
             .filter_by(student_id=student_id) \
             .first()
+        
+        if override is None:
+            raise AssignmentOverrideNotFoundException()
+        return override
     
     async def update_assignment_override(
         self,

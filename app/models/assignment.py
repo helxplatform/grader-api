@@ -25,8 +25,6 @@ class AssignmentModel(Base):
     last_modified_date = Column(DateTime(timezone=True), server_default=func.current_timestamp())
     is_published = Column(Boolean, server_default='f', nullable=False)
     manual_grading = Column(Boolean, server_default='f', nullable=False)
-    assignment_overrides = relationship("AssignmentOverrideModel", cascade="all", back_populates="assignment")
-
 
     @hybrid_property
     def student_notebook_path(self) -> str:

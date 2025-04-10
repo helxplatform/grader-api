@@ -13,7 +13,7 @@ from app.schemas.course import UpdateCourseSchema
 from app.schemas.assignment import UpdateAssignmentSchema
 from app.core.exceptions import (
     AssignmentNotFoundException, NoCourseExistsException, 
-    UserNotFoundException, LMSUserNotFoundException
+    UserNotFoundException, LMSUserNotFoundException, AssignmentOverrideNotFoundException
 )
 
 class LmsSyncService:
@@ -77,7 +77,7 @@ class LmsSyncService:
 
                 # Update assignment override if they exist for this assignment in the DB, 
                 # Otherwise create them for new students added to the override
-                if(assignment["has_overrides"]):
+                if assignment["has_overrides"]:
                     for canvas_override in assignment["overrides"]:
                         for student_id in canvas_override["student_ids"]:
                             try:
@@ -86,7 +86,7 @@ class LmsSyncService:
                                     student_id=student_id
                                 )
                                 await self.assignment_override_service.update_assignment_override(db_override, canvas_override)
-                            except:
+                            except AssignmentOverrideNotFoundException:
                                 await self.assignment_override_service.create_assignment_override(canvas_override, student_id)
                 else:
                     # Delete assignment overrides if they exist for this assignment in the DB, but do not exist in Canvas
@@ -107,7 +107,7 @@ class LmsSyncService:
                 )
 
                 # Create assignment overrides if the new assignment has one
-                if(assignment["has_overrides"]):
+                if assignment["has_overrides"]:
                     for canvas_override in assignment["overrides"]:
                         for student_id in canvas_override["student_ids"]:
                             await self.assignment_override_service.create_assignment_override(canvas_override, student_id)
@@ -283,6 +283,6 @@ class LmsSyncService:
         print("Syncing the LMS with the database")
         await self.sync_course()
         await self.sync_students()
-        await self.sync_assignments()
         await self.sync_instructors()
+        await self.sync_assignments()
         print("Syncing complete")

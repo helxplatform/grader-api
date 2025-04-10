@@ -1,17 +1,17 @@
 """create assignment override table
 
-Revision ID: 8c934aeb6c1e
-Revises: bdf5e21a88df
-Create Date: 2025-02-11 20:08:54.438049+00:00
+Revision ID: 3041ccda6dc6
+Revises: 5d464f430f43
+Create Date: 2025-04-08 19:34:04.764955+00:00
 
 """
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '8c934aeb6c1e'
-down_revision = 'bdf5e21a88df'
+revision = '3041ccda6dc6'
+down_revision = '5d464f430f43'
 branch_labels = None
 depends_on = None
 

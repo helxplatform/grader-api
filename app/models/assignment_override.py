@@ -19,9 +19,11 @@ class AssignmentOverrideModel(Base):
 
     student = relationship(
         "StudentModel",
-        foreign_keys="AssignmentOverrideModel.student_id"
+        foreign_keys="AssignmentOverrideModel.student_id",
+        backref=backref("assignment_overrides", cascade="all,delete")
     )
     assignment = relationship(
         "AssignmentModel",
-        foreign_keys="AssignmentOverrideModel.assignment_id"
+        foreign_keys="AssignmentOverrideModel.assignment_id",
+        backref=backref("assignment_overrides", cascade="all,delete")
     )

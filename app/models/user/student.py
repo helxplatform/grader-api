@@ -17,4 +17,3 @@ class StudentModel(UserModel):
 
     submissions = relationship("SubmissionModel", cascade="all,delete", back_populates="student")
     extra_times = relationship("ExtraTimeModel", cascade="all,delete", back_populates="student")
-    assignment_overrides = relationship("AssignmentOverrideModel", cascade="all,delete", back_populates="student")

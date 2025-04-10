@@ -3,6 +3,7 @@ from .token import *
 from .auth import *
 from .user import *
 from .assignment import *
+from .assignment_override import *
 from .submission import *
 from .course import *
 from .ldap import *
