@@ -7,6 +7,7 @@ from .jwt import *
 from .commit import *
 from .settings import *
 from .grade_report import *
+from .assignment_override import *
 from .job import *
 from .websocket import *
 from .pubsub import *

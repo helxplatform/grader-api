@@ -99,10 +99,16 @@ class CanvasService:
     
     # returns a dictionary of assignments for a course
     async def get_assignments(self):
-        return await self._get(f"courses/{ settings.CANVAS_COURSE_ID }/assignments")
+        return await self._get(f"courses/{ settings.CANVAS_COURSE_ID }/assignments", params = {
+            "override_assignment_dates": "false",
+            "include[]": "overrides"
+        })
 
     async def get_assignment(self, assignment_id):
-        return await self._get(f"courses/{ settings.CANVAS_COURSE_ID }/assignments/{ assignment_id }")
+        return await self._get(f"courses/{ settings.CANVAS_COURSE_ID }/assignments/{ assignment_id }", params = {
+            "override_assignment_dates": "false",
+            "include[]": "overrides"
+        })
     
     """ NOTE: Will return a Submission for every specified student_id, even if they have not submitted (submitted_at = None). """
     """ NOTE: include_submission_history includes the returned Submission as its final element. """

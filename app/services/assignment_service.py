@@ -20,6 +20,7 @@ from app.core.exceptions import (
     AssignmentDueBeforeOpenException,
     SubmissionMaxAttemptsReachedException
 )
+from app.services.assignment_override_service import AssignmentOverrideService
 from app.enums.assignment_status import AssignmentStatus
 from app.services.submission_service import SubmissionService
 
@@ -234,26 +235,6 @@ class AssignmentService:
             except: pass
 
         return assignment
-    
-    # Get the earliest time at which the given assignment is available
-    async def get_earliest_available_date(self, assignment: AssignmentModel) -> datetime | None:
-        if assignment.available_date is None: return None
-        earliest_deferral = self.session.query(ExtraTimeModel.deferred_time) \
-            .filter_by(assignment_id=assignment.id) \
-            .order_by(ExtraTimeModel.deferred_time) \
-            .first()
-        
-        return assignment.available_date + (earliest_deferral if earliest_deferral is not None else timedelta(0))
-    
-    # Gets the latest time at which the given assignment closes
-    async def get_latest_due_date(self, assignment: AssignmentModel) -> datetime | None:
-        if assignment.due_date is None: return None
-        latest_time = self.session.query(ExtraTimeModel.extra_time) \
-            .filter_by(assignment_id=assignment.id) \
-            .order_by(ExtraTimeModel.extra_time.desc()) \
-            .first()
-        
-        return assignment.due_date + (latest_time.extra_time if latest_time.extra_time is not None else timedelta(0))
 
     """ Compute the default gitignore for an assignment. """
     async def get_gitignore_content(self, assignment: AssignmentModel) -> str:
@@ -324,7 +305,7 @@ class InstructorAssignmentService(AssignmentService):
 
         return assignment_due_date
 
-    def get_assignment_status(self) -> AssignmentStatus:
+    async def get_assignment_status(self) -> AssignmentStatus:
         if not self.assignment_model.is_published: return AssignmentStatus.UNPUBLISHED
 
         current_timestamp = self.session.scalar(func.current_timestamp())
@@ -361,61 +342,42 @@ class StudentAssignmentService(AssignmentService):
         self.student_model = student_model
         self.assignment_model = assignment_model
         self.course_model = course_model
-        self.extra_time_model = self._get_extra_time_model()
+        self.assignment_override_service = AssignmentOverrideService(session)
 
-    def _get_extra_time_model(self) -> ExtraTimeModel | None:
-        extra_time_model = self.session.query(ExtraTimeModel) \
-            .filter(
-                (ExtraTimeModel.assignment_id == self.assignment_model.id) &
-                (ExtraTimeModel.student_id == self.student_model.id)
-            ) \
-            .first()
-        return extra_time_model
+    # The release date for a specific student, considering assignment override for this student
+    async def get_adjusted_available_date(self) -> datetime | None:
+        assignment_override = await self.assignment_override_service.get_assignment_override_by_student_id(self.assignment_model.id, self.student_model.id)
 
-    # The release date for a specific student, considering extra_time
-    def get_adjusted_available_date(self) -> datetime | None:
-        assignment_open_date = self.assignment_model.available_date or self.course_model.start_at
+        assignment_open_date = (
+            assignment_override.available_date if assignment_override else \
+            self.assignment_model.available_date if self.assignment_model.available_date \
+            else self.course_model.start_at
+        )
+
         if assignment_open_date is None: return None
-        deferred_time = self.extra_time_model.deferred_time if self.extra_time_model is not None else timedelta(0)
         
-        return assignment_open_date + deferred_time
+        return assignment_open_date
 
-    # The due date for a specific student, considering extra_time
-    def get_adjusted_due_date(self) -> datetime | None:
-        assignment_due_date = self.assignment_model.due_date or self.course_model.end_at
+    # The due date for a specific student, considering assignment override for this student
+    async def get_adjusted_due_date(self) -> datetime | None:
+        assignment_override = await self.assignment_override_service.get_assignment_override_by_student_id(self.assignment_model.id, self.student_model.id)
+        
+        assignment_due_date = (
+            assignment_override.due_date if assignment_override else \
+            self.assignment_model.due_date if self.assignment_model.due_date \
+            else self.course_model.end_at
+        )
+
         if assignment_due_date is None: return None
 
-        # If a student does not have any extra time allotted for the assignment,
-        # allocate them a timedelta of 0.
-        if self.extra_time_model is not None:
-            deferred_time = self.extra_time_model.deferred_time
-            extra_time = self.extra_time_model.extra_time
-        else:
-            deferred_time = timedelta(0)
-            extra_time = timedelta(0)
-
-        # Base due date + have to defer by whatever amount the available date was deferred by + extra time + base extra time
-        return assignment_due_date + deferred_time + extra_time + self.student_model.base_extra_time
-
-    def _get_is_available(self) -> bool:
-        adjusted_available_date = self.get_adjusted_available_date()
-        if adjusted_available_date is None: return True
-        current_timestamp = self.session.scalar(func.current_timestamp())
-        return current_timestamp >= adjusted_available_date
+        return assignment_due_date
     
-    def _get_is_closed(self) -> bool:
-        adjusted_due_date = self.get_adjusted_due_date()
-        if adjusted_due_date is None: 
-            return not self._get_is_available()
-        current_timestamp = self.session.scalar(func.current_timestamp())
-        return current_timestamp > adjusted_due_date
-    
-    def get_assignment_status(self) -> AssignmentStatus:
+    async def get_assignment_status(self) -> AssignmentStatus:
         if not self.assignment_model.is_published: return AssignmentStatus.UNPUBLISHED
 
         current_timestamp = self.session.scalar(func.current_timestamp())
-        adjusted_available_date = self.get_adjusted_available_date()
-        adjusted_due_date = self.get_adjusted_due_date()
+        adjusted_available_date = await self.get_adjusted_available_date()
+        adjusted_due_date = await self.get_adjusted_due_date()
 
         # Until a course is properly configured (has start_at,end_at dates),
         # all published assignments will display as upcoming. 
@@ -428,7 +390,7 @@ class StudentAssignmentService(AssignmentService):
         else: return AssignmentStatus.CLOSED
 
     async def validate_student_can_submit(self):
-        assignment_status = self.get_assignment_status()
+        assignment_status = await self.get_assignment_status()
         if assignment_status == AssignmentStatus.UNPUBLISHED:
             raise AssignmentNotPublishedException()
 
@@ -445,7 +407,7 @@ class StudentAssignmentService(AssignmentService):
 
     async def get_student_assignment_schema(self) -> StudentAssignmentSchema:
         assignment = AssignmentSchema.from_orm(self.assignment_model).dict()
-        assignment_status = self.get_assignment_status()
+        assignment_status = await self.get_assignment_status()
 
         assignment["protected_files"] = await self.get_protected_files(self.assignment_model)
         assignment["overwritable_files"] = await self.get_overwritable_files(self.assignment_model)
@@ -454,8 +416,8 @@ class StudentAssignmentService(AssignmentService):
             self.assignment_model
         )
         assignment["status"] = assignment_status.value
-        assignment["adjusted_available_date"] = self.get_adjusted_available_date()
-        assignment["adjusted_due_date"] = self.get_adjusted_due_date()
+        assignment["adjusted_available_date"] = await self.get_adjusted_available_date()
+        assignment["adjusted_due_date"] = await self.get_adjusted_due_date()
         assignment["is_available"] = assignment_status == AssignmentStatus.OPEN
         assignment["is_closed"] = assignment_status == AssignmentStatus.CLOSED
         assignment["is_published"] = assignment_status != AssignmentStatus.UNPUBLISHED

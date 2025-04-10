@@ -14,6 +14,7 @@ class StudentService(UserService):
 
     async def create_student(
         self,
+        id: int,
         onyen: str,
         name: str,
         email: str
@@ -33,6 +34,7 @@ class StudentService(UserService):
             pass
 
         student = StudentModel(
+            id=id,
             onyen=onyen,
             name=name,
             email=email,
@@ -94,6 +96,12 @@ class StudentService(UserService):
 
     async def get_user_by_onyen(self, onyen: str) -> StudentModel:
         user = await super().get_user_by_onyen(onyen)
+        if not isinstance(user, StudentModel):
+            raise NotAStudentException()
+        return user
+    
+    async def get_user_by_id(self, id: int) -> StudentModel:
+        user = await super().get_user_by_id(id)
         if not isinstance(user, StudentModel):
             raise NotAStudentException()
         return user

@@ -1,6 +1,3 @@
-import asyncio
-import os.path
-from typing import BinaryIO
 from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.services.canvas_service import CanvasService, UpdateCanvasAssignmentBody, DuplicateFileAction
@@ -10,12 +7,13 @@ from app.services.assignment_service import AssignmentService
 from app.services.grading_service import GradingService
 from app.services.user.student_service import StudentService
 from app.services.user.instructor_service import InstructorService
+from app.services.assignment_override_service import AssignmentOverrideService
 from app.models import AssignmentModel, SubmissionModel
 from app.schemas.course import UpdateCourseSchema
 from app.schemas.assignment import UpdateAssignmentSchema
 from app.core.exceptions import (
     AssignmentNotFoundException, NoCourseExistsException, 
-    UserNotFoundException, LMSUserNotFoundException
+    UserNotFoundException, LMSUserNotFoundException, AssignmentOverrideNotFoundException
 )
 
 class LmsSyncService:
@@ -27,6 +25,7 @@ class LmsSyncService:
         self.instructor_service = InstructorService(session)
         self.grading_service = GradingService(session)
         self.ldap_service = LDAPService()
+        self.assignment_override_service = AssignmentOverrideService(session)
         self.session = session
 
     async def get_assignment(self, assignment_id):
@@ -61,6 +60,7 @@ class LmsSyncService:
             if assignment.id not in [a['id'] for a in canvas_assignments]:
                 await self.assignment_service.delete_assignment(assignment)
 
+        # Update assignments that are already in the database
         for assignment in canvas_assignments:
             # Canvas uses -1 for unlimited attempts.
             max_attempts = assignment["allowed_attempts"] if assignment["allowed_attempts"] >= 0 else None
@@ -75,17 +75,43 @@ class LmsSyncService:
                     max_attempts=max_attempts
                 ))
 
+                # Update assignment override if they exist for this assignment in the DB, 
+                # Otherwise create them for new students added to the override
+                if assignment["has_overrides"]:
+                    for canvas_override in assignment["overrides"]:
+                        for student_id in canvas_override["student_ids"]:
+                            try:
+                                db_override = await self.assignment_override_service.get_assignment_override_by_student_id(
+                                    assignment_id=assignment["id"],
+                                    student_id=student_id
+                                )
+                                await self.assignment_override_service.update_assignment_override(db_override, canvas_override)
+                            except AssignmentOverrideNotFoundException:
+                                await self.assignment_override_service.create_assignment_override(canvas_override, student_id)
+                else:
+                    # Delete assignment overrides if they exist for this assignment in the DB, but do not exist in Canvas
+                    for db_override in await self.assignment_override_service.get_assignment_overrides_by_assignment_id(assignment["id"]):
+                        for student_override in db_override:
+                            await self.assignment_override_service.delete_assignment_override(student_override)
+
+            # Assignment does not exist in the database, create it
             except AssignmentNotFoundException as e:
-                #create a new assignment
                 await self.assignment_service.create_assignment(
-                    id=assignment['id'],
-                    name=assignment['name'], 
-                    due_date=assignment['due_at'], 
-                    available_date=assignment['unlock_at'],
-                    directory_path=assignment['name'],
-                    is_published=assignment['published'],
+                    id=assignment["id"],
+                    name=assignment["name"], 
+                    due_date=assignment["due_at"], 
+                    available_date=assignment["unlock_at"],
+                    directory_path=assignment["name"],
+                    is_published=assignment["published"],
                     max_attempts=max_attempts
                 )
+
+                # Create assignment overrides if the new assignment has one
+                if assignment["has_overrides"]:
+                    for canvas_override in assignment["overrides"]:
+                        for student_id in canvas_override["student_ids"]:
+                            await self.assignment_override_service.create_assignment_override(canvas_override, student_id)
+
         
         return canvas_assignments
 
@@ -112,7 +138,7 @@ class LmsSyncService:
                 except LMSUserNotFoundException: pass
        
         for student in canvas_students:
-            pid, email, name = student.get("sis_user_id"), student.get("email"), student.get("name")
+            id, pid, email, name = student.get("id"), student.get("sis_user_id"), student.get("email"), student.get("name")
             if pid is None or email is None or name is None:
                 print("Skipping over pending student", name or "<unknown>")
                 continue
@@ -132,6 +158,7 @@ class LmsSyncService:
                 #create a new student
                 print("student doesn't exist", user_info.onyen)
                 await self.student_service.create_student(
+                    id=id,
                     onyen=user_info.onyen,
                     name=name,
                     email=email
@@ -164,7 +191,7 @@ class LmsSyncService:
                 except LMSUserNotFoundException: pass
         
         for instructor in canvas_instructors:
-            pid, email, name = instructor.get("sis_user_id"), instructor.get("email"), instructor.get("name")
+            id, pid, email, name = instructor.get("id"), instructor.get("sis_user_id"), instructor.get("email"), instructor.get("name")
             if pid is None or email is None or name is None:
                 print("Skipping over pending instructor", name or "<unknown>")
                 continue
@@ -180,6 +207,7 @@ class LmsSyncService:
                 #create a new instructor
                 print("instructor doesn't exit", user_info.onyen)
                 await self.instructor_service.create_instructor(
+                    id=id,
                     onyen=user_info.onyen,
                     name=name,
                     email=email
@@ -188,7 +216,7 @@ class LmsSyncService:
                 await self.canvas_service.associate_pid_to_user(user_info.onyen, pid)
 
         return canvas_instructors
-    
+
     async def upsync_submission(
         self,
         submission: SubmissionModel,
@@ -254,7 +282,7 @@ class LmsSyncService:
     async def downsync(self):
         print("Syncing the LMS with the database")
         await self.sync_course()
-        await self.sync_assignments()
         await self.sync_students()
         await self.sync_instructors()
+        await self.sync_assignments()
         print("Syncing complete")

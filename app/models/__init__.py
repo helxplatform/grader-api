@@ -4,4 +4,5 @@ from .assignment import AssignmentModel
 from .extra_time import ExtraTimeModel
 from .course import CourseModel
 from .grade_report import GradeReportModel
+from .assignment_override import AssignmentOverrideModel
 from .job_status import JobStatusModel
