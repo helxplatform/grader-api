@@ -2,7 +2,7 @@ from typing import List
 from app.events import event_emitter
 from app.models import StudentModel
 from app.schemas import UserCrudEvent, CrudType
-from app.core.role_permissions import student_role
+from app.core.role_permissions import StudentRole
 from app.core.exceptions import NotAStudentException, UserAlreadyExistsException, UserNotFoundException
 from .user_service import UserService
 
@@ -36,7 +36,7 @@ class StudentService(UserService):
             onyen=onyen,
             name=name,
             email=email,
-            role=student_role
+            role=StudentRole()
         )
         self.session.add(student)
         self.session.commit()

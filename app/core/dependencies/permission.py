@@ -67,7 +67,7 @@ class BaseRolePermission(RequireLoginPermission):
                 
         raise MissingPermissionException(self.permission)
 
-
+""" TODO: Marked for refactor. This should probably be done differently. """
 class AssignmentListPermission(BaseRolePermission):
     permission = UserPermission.ASSIGNMENT__GET
 class AssignmentCreatePermission(BaseRolePermission):

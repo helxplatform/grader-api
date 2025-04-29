@@ -1,12 +1,12 @@
 from app.models import InstructorModel
-from app.core.role_permissions import instructor_role, admin_role
+from app.core.role_permissions import TestInstructorRole, TestAdminRole
 
 basic_instructor = InstructorModel(
     onyen="basicinstructor",
     first_name="Basic",
     last_name="Instructor",
     email="basicinstructor@unc.edu",
-    role=instructor_role
+    role=TestInstructorRole()
 )
 
 admin = InstructorModel(
@@ -14,7 +14,7 @@ admin = InstructorModel(
     first_name="Admin",
     last_name="",
     email="admin@renci.org",
-    role=admin_role
+    role=TestAdminRole()
 )
 
 data = [

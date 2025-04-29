@@ -52,26 +52,43 @@ class UserRoleType(TypeDecorator):
             for role in roles:
                 if role.name == value: return role
         return None
+    
+class AdminRole(UserRole):
+    def __init__(self):
+        super().__init__("admin", [p for p in UserPermission])
 
-admin_role = UserRole("admin", [p for p in UserPermission])
-instructor_role = UserRole("instructor", [
-    UserPermission.ASSIGNMENT__GET,
-    UserPermission.ASSIGNMENT__CREATE,
-    UserPermission.ASSIGNMENT__MODIFY,
-    UserPermission.ASSIGNMENT__DELETE,
-    UserPermission.COURSE__GET,
-    UserPermission.COURSE__CREATE,
-    UserPermission.COURSE__MODIFY,
-    UserPermission.STUDENT__GET,
-    UserPermission.STUDENT__CREATE,
-    UserPermission.STUDENT__MODIFY,
-    UserPermission.INSTRUCTOR__GET,
-    UserPermission.SUBMISSION__GET,
-    UserPermission.SUBMISSION__DOWNLOAD
-])
-student_role = UserRole("student", [
-    UserPermission.COURSE__GET,
-    UserPermission.SUBMISSION__CREATE,
-    UserPermission.INSTRUCTOR__GET
-])
-roles = [admin_role, instructor_role, student_role]
+class InstructorRole(UserRole):
+    def __init__(self):
+        super().__init__("instructor", [
+            UserPermission.ASSIGNMENT__GET,
+            UserPermission.ASSIGNMENT__CREATE,
+            UserPermission.ASSIGNMENT__MODIFY,
+            UserPermission.ASSIGNMENT__DELETE,
+            UserPermission.COURSE__GET,
+            UserPermission.COURSE__CREATE,
+            UserPermission.COURSE__MODIFY,
+            UserPermission.STUDENT__GET,
+            UserPermission.STUDENT__CREATE,
+            UserPermission.STUDENT__MODIFY,
+            UserPermission.INSTRUCTOR__GET,
+            UserPermission.SUBMISSION__GET,
+            UserPermission.SUBMISSION__DOWNLOAD
+        ])
+
+class StudentRole(UserRole):
+    def __init__(self):
+        super().__init__("student", [
+        UserPermission.COURSE__GET,
+        UserPermission.SUBMISSION__CREATE,
+        UserPermission.INSTRUCTOR__GET
+    ])
+
+""" Test roles are functionally identical but required in differentiating between production and testing environments. """  
+class TestAdminRole(AdminRole):
+    pass
+ 
+class TestInstructorRole(InstructorRole):
+    pass
+
+class TestStudentRole(StudentRole):
+    pass

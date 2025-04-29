@@ -2,7 +2,7 @@ from typing import List
 from app.events import event_emitter
 from app.models import InstructorModel
 from app.schemas import UserCrudEvent, CrudType
-from app.core.role_permissions import instructor_role
+from app.core.role_permissions import InstructorRole
 from app.core.exceptions import NotAnInstructorException, UserAlreadyExistsException, UserNotFoundException
 from .user_service import UserService
 
@@ -34,7 +34,7 @@ class InstructorService(UserService):
             onyen=onyen,
             name=name,
             email=email,
-            role=instructor_role
+            role=InstructorRole()
         )
         self.session.add(instructor)
         self.session.commit()

@@ -94,6 +94,11 @@ class JLPUser(JupyterHttpUser):
         self.get_course()
 
     @task(1)
+    def test_downsync(self):
+        """ Run a downsync call (JLP). """
+        ...
+
+    @task(1)
     def test_get_settings(self):
         self.client.get("/api/v1/settings")
 
@@ -140,3 +145,4 @@ class JLSUser(JupyterHttpUser):
     @task(1)
     def test_get_settings(self):
         self.client.get("/api/v1/settings")
+
