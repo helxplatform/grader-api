@@ -183,12 +183,29 @@ class GradingService:
                         grade_data = json.load(f)
                 
                 except Exception as e:
-                    print(f"could not grade submission for { submission.student.onyen }: { str(e) }")
+                    print(f"Could not grade submission for { submission.student.onyen }: { str(e) }")
+                    final_scores[submission] = (
+                        SubmissionGradeSchema(
+                            score=0,
+                            total_points=0,
+                            comments=f"Your notebook failed to run during grading. Reason:\n{e}",
+                            submission_already_graded=submission.graded
+                        ),
+                        student_notebook_content
+                    )
                     continue
 
                 tests = [test for test in grade_data["tests"] if "score" in test]
-                public_tests = [test for test in grade_data["tests"] if "score" not in test]
+                public_tests = [test for test in grade_data["tests"] if test.get("visibility") == "visible"]
                 public_test_comments = "\n".join([test["output"] for test in public_tests])
+
+                private_tests = [test for test in grade_data["tests"] if test.get("visibility") == "hidden"]
+                failed_private_tests = [test for test in private_tests if test["score"] < test["max_score"]]
+                private_test_feedback = "\n".join([
+                    f"{test['name']}: {test['score']} / {test['max_score']}"
+                    for test in sorted(failed_private_tests,key=lambda x: x["name"])
+                ])
+                test_feedback = f"{public_test_comments}\n{'-'*80}\nHidden tests:\n{private_test_feedback}"
 
                 score = sum([question["score"] for question in tests])
                 max_score = sum([question["max_score"] for question in tests])
@@ -197,7 +214,7 @@ class GradingService:
                     SubmissionGradeSchema(
                         score=score,
                         total_points=max_score,
-                        comments=public_test_comments,
+                        comments=test_feedback,
                         submission_already_graded=submission.graded
                     ),
                     student_notebook_content
@@ -228,9 +245,10 @@ class GradingService:
                         # This submission is already graded. No point in reuploading it to Canvas.
                         continue
                     
+                    grade_proportion = submission_grade.score / grade_report.total_points if grade_report.total_points != 0 else 0
                     await LmsSyncService(self.session).upsync_grade(
                         submission=submission,
-                        grade_proportion=submission_grade.score / grade_report.total_points,
+                        grade_proportion=grade_proportion,
                         comments=submission_grade.comments if assignment.grader_question_feedback else None,
                     )
                     submission.graded = True
