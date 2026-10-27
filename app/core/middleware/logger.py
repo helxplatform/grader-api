@@ -21,10 +21,16 @@ class LogMiddleware(BaseHTTPMiddleware):
 
     # https://github.com/tiangolo/fastapi/issues/394#issuecomment-927272627
     async def set_body(self, request: Request):
-        receive_ = await request._receive()
+        body = await request.body()
+        receive_ = request._receive
+        body_sent = False
 
         async def receive() -> Message:
-            return receive_
+            nonlocal body_sent
+            if not body_sent:
+                body_sent = True
+                return {"type": "http.request", "body": body, "more_body": False}
+            return await receive_()
 
         request._receive = receive
 
